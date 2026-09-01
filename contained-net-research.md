@@ -1,7 +1,7 @@
 ---
 description: Contained internet-only research agent with web access, no repo read, no edit, and no shell
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

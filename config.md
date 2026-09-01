@@ -1,7 +1,7 @@
 ---
 description: OpenCode configuration and documentation management
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

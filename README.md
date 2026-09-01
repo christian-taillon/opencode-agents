@@ -26,7 +26,7 @@ OpenCode V2 accepts V1-compatible agent definitions. This repository intentional
 
 ## Model policy
 
-The current Ollama Cloud definitions use `ollama-cloud/glm-5.3-flash`, with low reasoning for lightweight retrieval and operations and maximum reasoning for substantive work. OpenAI model IDs and variants reflect the configured routing ladder and may need to be adapted to your provider catalog.
+The current Ollama Cloud definitions use `ollama-cloud/glm-5.3` (non-Flash) for judgment agents — orchestration, planning, implementation, review, GitHub, config, and contained agents — and `ollama-cloud/glm-5.3-flash` for lightweight retrieval and operations workers. OpenAI model IDs and variants reflect the configured routing ladder and may need to be adapted to your provider catalog.
 
 ## Safety
 

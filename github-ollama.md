@@ -1,7 +1,7 @@
 ---
-description: Ollama Cloud GitHub agent for repository management, issues, pull requests, and code reviews (glm-5.3-flash)
+description: Ollama Cloud GitHub agent for repository management, issues, pull requests, and code reviews (glm-5.3)
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

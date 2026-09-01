@@ -1,7 +1,7 @@
 ---
 description: Contained no-tool lower-trust reasoning agent for sanitized text-only tasks
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

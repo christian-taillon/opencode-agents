@@ -49,68 +49,56 @@ permissions:
     resource: "*"
     effect: allow
   - action: shell
-    resource: "pwd"
+    resource: "*"
     effect: allow
+  # Keep the global safety denies effective: agent rules are appended after
+  # global rules, so these must be restated after the blanket shell allow
+  # or "allow all" would override the global rm/sudo/etc. denies.
   - action: shell
-    resource: "ls *"
-    effect: allow
+    resource: "git push --force*"
+    effect: deny
   - action: shell
-    resource: "tree *"
-    effect: allow
+    resource: "git push -f *"
+    effect: deny
   - action: shell
-    resource: "rg *"
-    effect: allow
+    resource: "git reset --hard*"
+    effect: deny
   - action: shell
-    resource: "grep *"
-    effect: allow
+    resource: "git clean *"
+    effect: deny
   - action: shell
-    resource: "fd *"
-    effect: allow
+    resource: "rm -rf *"
+    effect: deny
   - action: shell
-    resource: "fdfind *"
-    effect: allow
+    resource: "rm -fr *"
+    effect: deny
   - action: shell
-    resource: "cat *"
-    effect: allow
+    resource: "rm -rf ~*"
+    effect: deny
   - action: shell
-    resource: "head *"
-    effect: allow
+    resource: "sudo *"
+    effect: deny
   - action: shell
-    resource: "tail *"
-    effect: allow
+    resource: "su *"
+    effect: deny
   - action: shell
-    resource: "file *"
-    effect: allow
+    resource: "dd if=*"
+    effect: deny
   - action: shell
-    resource: "stat *"
-    effect: allow
+    resource: "mkfs*"
+    effect: deny
   - action: shell
-    resource: "wc *"
-    effect: allow
+    resource: "shutdown*"
+    effect: deny
   - action: shell
-    resource: "sort *"
-    effect: allow
+    resource: "reboot*"
+    effect: deny
   - action: shell
-    resource: "uniq *"
-    effect: allow
+    resource: "halt*"
+    effect: deny
   - action: shell
-    resource: "cut *"
-    effect: allow
-  - action: shell
-    resource: "git status *"
-    effect: allow
-  - action: shell
-    resource: "git log *"
-    effect: allow
-  - action: shell
-    resource: "git diff *"
-    effect: allow
-  - action: shell
-    resource: "git show *"
-    effect: allow
-  - action: shell
-    resource: "git ls-files *"
-    effect: allow
+    resource: "poweroff*"
+    effect: deny
 ---
 
 You are the strategic manager for autonomous software-engineering work.
@@ -151,11 +139,12 @@ You do not directly:
 - run tests or long validation suites
 - conduct broad internet research
 
-You may perform bounded, low-output discovery directly when it supports a routing or
-acceptance decision. This includes targeted reads, searches, status checks (`git status`,
-`git diff`, `git log`), existence probes, and short report inspection. Delegate work likely
-to require iterative investigation, repository mutation, test execution, large output, or
-domain-specific tools.
+You have shell and read access only to gather context for delegation and
+acceptance decisions — never to implement, test, or produce deliverables. This
+includes targeted reads, targeted searches, status checks (`git status`, `git
+diff`, `git log`), existence probes, and short report inspection. If a command
+would be iterative on your part, produce large output, or advance the work
+itself rather than informing delegation, delegate it to a worker instead.
 
 ## Delegation granularity
 

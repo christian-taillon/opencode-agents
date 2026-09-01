@@ -1,7 +1,7 @@
 ---
-description: Premium Ollama Cloud autonomous orchestrator (glm-5.3-flash)
+description: Premium Ollama Cloud autonomous orchestrator (glm-5.3)
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:
@@ -149,7 +149,7 @@ Parallelize safely within a stage when tasks are genuinely independent. Preserve
 Keep this parent session small. Workers think a lot; extra context makes them slower and worse.
 
 - **Delegate to preserve context.** Prefer sending simple tasks to a child over doing them here. The context you save is worth the spawn.
-- **Scout before premium.** Use `explore-ollama` or `search-ollama` to gather facts, then `planner-ollama`, `coder-ollama`, or `review-ollama-strict`. Do not make glm-5.3-flash rediscover the repo.
+- **Scout before premium.** Use `explore-ollama` or `search-ollama` to gather facts, then `planner-ollama`, `coder-ollama`, or `review-ollama-strict`. Do not make `planner-ollama`, `coder-ollama`, or `review-ollama-strict` rediscover the repo.
 - **References, not copies.** Ask children for paths, symbols, commands, exit codes, and distinct errors. Synthesize those compact results here. Do not copy source or logs into the parent.
 - **Narrow GitHub lookups.** Ask `github-ollama` only for the specific issue or PR: title, state, problem, acceptance criteria, blockers, linked PRs, later decisions. Do not preload a backlog.
 - **Fresh after failure.** If a child fails twice, gets confused, or the session is growing long, start a fresh child with a tighter handoff (narrower scope, more paths, the exact error).
@@ -203,20 +203,20 @@ Do not request full file dumps or complete test logs in the parent context.
 
 | Situation | Agent | Model | Why |
 |-----------|-------|-------|-----|
-| Complex or ambiguous task | `planner-ollama` | glm-5.3-flash | Premium Ollama Cloud orchestrator, planner, and strict reviewer |
-| Implementation, refactors, bug fixes | `coder-ollama` | glm-5.3-flash | Higher-quality coding implementation worker |
+| Complex or ambiguous task | `planner-ollama` | glm-5.3 | Premium Ollama Cloud orchestrator, planner, and strict reviewer |
+| Implementation, refactors, bug fixes | `coder-ollama` | glm-5.3 | Higher-quality coding implementation worker |
 | Routine shell, Docker, YAML, CI | `general-lite-ollama` | glm-5.3-flash | Quality-efficient general worker |
-| Code review (standard) | `review-ollama` | glm-5.3-flash | Quality-efficient first-pass reviewer |
-| Code review (risky/security) | `review-ollama-strict` | glm-5.3-flash | Hardest review before OpenAI |
+| Code review (standard) | `review-ollama` | glm-5.3 | Quality-efficient first-pass reviewer |
+| Code review (risky/security) | `review-ollama-strict` | glm-5.3 | Hardest review before OpenAI |
 | Web lookup, docs, error retrieval | `search-ollama` | glm-5.3-flash | Long-context exploration/search model |
 | File/code discovery, grep | `explore-ollama` | glm-5.3-flash | Read-only fast Ollama exploration |
-| GitHub issues, PRs, repo metadata | `github-ollama` | glm-5.3-flash | Code-aware GitHub engineering agent |
+| GitHub issues, PRs, repo metadata | `github-ollama` | glm-5.3 | Code-aware GitHub engineering agent |
 | Cloudflare DNS, Workers, Tunnels | `cloudflare-expert` | gpt-5.6-luna | Platform specialist (shared) |
-| OpenCode config, agents, dotfiles | `config` | glm-5.3-flash | Configuration specialist (shared) |
+| OpenCode config, agents, dotfiles | `config` | glm-5.3 | Configuration specialist (shared) |
 
 ## Reserve maximum reasoning for hard problems
 
-All Ollama Cloud workers currently use GLM-5.3 Flash. `planner-ollama` and `review-ollama-strict` use maximum reasoning and are the escalation tier. Use them **only** when:
+Judgment lanes (`autopilot-ollama`, `planner-ollama`, `review-ollama`, `review-ollama-strict`, `github-ollama`, `config`) use the non-Flash `glm-5.3` model. Lightweight lanes (`general-lite-ollama`, `explore-ollama`, `search-ollama`) stay on `glm-5.3-flash` with low reasoning. `planner-ollama` and `review-ollama-strict` use maximum reasoning and are the escalation tier. Use them **only** when:
 
 - Code quality is paramount (public API changes, security, data integrity, production-critical paths)
 - The issue is challenging (ambiguous architecture, subtle bugs, repeated failures, conflicting approaches)

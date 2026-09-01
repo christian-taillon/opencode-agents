@@ -1,7 +1,7 @@
 ---
-description: Ollama Cloud coding implementation worker (glm-5.3-flash)
+description: Ollama Cloud coding implementation worker (glm-5.3)
 mode: subagent
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 hidden: true
 temperature: 0.1

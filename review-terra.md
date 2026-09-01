@@ -1,7 +1,7 @@
 ---
 description: Strong independent reviewer and difficult-debugging analyst for unresolved or high-impact engineering concerns. Does not edit code.
 mode: subagent
-model: openai/gpt-5.6-terra#max
+model: openai/gpt-5.6-terra#medium
 permissions:
   - action: "*"
     resource: "*"

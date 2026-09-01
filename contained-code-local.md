@@ -1,7 +1,7 @@
 ---
 description: Contained trusted local code agent with repo read/write, dangerous bash approval, and no internet
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

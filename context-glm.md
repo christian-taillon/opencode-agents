@@ -1,7 +1,7 @@
 ---
 description: Long-context analysis and operations worker for tests, logs, repository synthesis, internet research, verification, and review. Does not implement application code.
 mode: subagent
-model: ollama-cloud/glm-5.3-flash#max
+model: ollama-cloud/glm-5.3-flash#high
 permissions:
   - action: "*"
     resource: "*"

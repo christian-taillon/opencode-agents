@@ -1,7 +1,7 @@
 ---
-description: Manual-only high-quality Ollama Cloud primary agent for cost-conscious focused work (glm-5.3-flash)
+description: Manual-only high-quality Ollama Cloud primary agent for cost-conscious focused work (glm-5.3)
 mode: primary
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

@@ -1,7 +1,7 @@
 ---
 description: Contained secure orchestrator that separates local code authority from internet research
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

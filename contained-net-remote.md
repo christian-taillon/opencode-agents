@@ -1,7 +1,7 @@
 ---
 description: Contained remote internet-only primary agent for an isolated OpenCode server
 mode: all
-model: ollama-cloud/glm-5.3-flash
+model: ollama-cloud/glm-5.3
 reasoningEffort: max
 temperature: 0.1
 permission:

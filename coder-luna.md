@@ -1,7 +1,7 @@
 ---
 description: Default implementation worker for normal software-engineering changes, including focused discovery, code changes, and focused validation.
 mode: subagent
-model: openai/gpt-5.6-luna#high
+model: openai/gpt-5.6-luna#xhigh
 permissions:
   - action: "*"
     resource: "*"
