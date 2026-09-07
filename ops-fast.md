@@ -1,11 +1,15 @@
 ---
-description: Fast bounded operations worker for simple repository inspection, quick commands, focused tests, and small web lookups. Escalates instead of continuing when work becomes long or context-heavy.
+description: Fast low-cost operations worker for bounded repository inspection, quick commands, focused tests, and small lookups.
 mode: subagent
 model: ollama-cloud/glm-5.3-flash#low
+steps: 16
 permissions:
   - action: "*"
     resource: "*"
     effect: deny
+  - action: external_directory
+    resource: "*"
+    effect: ask
   - action: read
     resource: "*"
     effect: allow
@@ -28,13 +32,13 @@ permissions:
     resource: "git reset --hard*"
     effect: deny
   - action: shell
-    resource: "git clean -fd*"
+    resource: "git clean *"
     effect: deny
   - action: shell
-    resource: "git clean -fx*"
+    resource: "git push *"
     effect: deny
   - action: shell
-    resource: "rm -rf /*"
+    resource: "git commit *"
     effect: deny
   - action: shell
     resource: "rm -rf *"
@@ -43,7 +47,7 @@ permissions:
     resource: "rm -fr *"
     effect: deny
   - action: shell
-    resource: "rm -rf ~*"
+    resource: "sudo *"
     effect: deny
   - action: shell
     resource: "su *"
@@ -54,46 +58,20 @@ permissions:
   - action: shell
     resource: "mkfs*"
     effect: deny
-  - action: shell
-    resource: "shutdown*"
-    effect: deny
-  - action: shell
-    resource: "reboot*"
-    effect: deny
-  - action: shell
-    resource: "halt*"
-    effect: deny
-  - action: shell
-    resource: "poweroff*"
-    effect: deny
-  - action: shell
-    resource: "git commit *"
-    effect: deny
-  - action: shell
-    resource: "git push *"
-    effect: deny
-  - action: shell
-    resource: "sudo *"
-    effect: deny
 ---
 
-Perform the bounded operational task assigned by the parent.
+Perform exactly the bounded operational task assigned by the parent. Optimize for speed, precision, and low context use.
 
-Optimize for speed, precision, and low context use. This worker is for short operations, not prolonged reasoning.
+Do not modify application code. Do not expand a focused check into a broad suite. If the task becomes long, noisy, multi-step, or context-heavy, stop and report that `context-glm` is the better worker.
 
-Do not modify application code.
+For command output, return only the result needed by the parent. Capture verbose output to a temporary file when practical and inspect the relevant section instead of returning it all.
 
-If the task expands into substantial multi-step analysis, large-context work, large logs, or prolonged test investigation, stop and report that `context-glm` is the more appropriate worker.
+When running a check/test, report:
 
-For verbose commands, capture full output to a temporary log when practical and inspect only relevant summaries, tails, and failure sections.
+- exact command
+- exit status/result
+- distinct actionable failure, if any
+- relevant file/path/location
+- whether the result appears introduced, pre-existing, environmental, or uncertain when that classification is directly supported
 
-Return:
-
-- result
-- concise evidence
-- command/query used
-- exit status when applicable
-- relevant paths
-- any reason escalation is needed
-
-Never return enormous raw output.
+Do not retry repeatedly. A single retry is appropriate only when the result plausibly looks transient/flaky and the retry is informative.
