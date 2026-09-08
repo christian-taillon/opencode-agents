@@ -57,6 +57,9 @@ permissions:
   - action: subagent
     resource: ops-autopilot-ollama
     effect: allow
+  - action: subagent
+    resource: gated-direct
+    effect: allow
   - action: shell
     resource: "git push --force*"
     effect: deny
@@ -135,6 +138,8 @@ Do not delegate one command per agent. Do not create sequential review ladders. 
 `advisor-sol`: architecture, security boundaries, consequential tradeoffs, conflicting evidence, or strategic diagnosis. Give concise evidence.
 
 `ops-autopilot-ollama`: large/noisy/multi-step tests, builds, CI, logs, inventory, or research, with `context-glm` beneath it as needed. It can coordinate only cheap operations/context/GitHub workers and cannot implement code. Give explicit scope, acceptance, and stop conditions.
+
+`gated-direct`: bounded implementation or investigation that should have normal project file access, but the user wants a human approval checkpoint before host command execution or accessing anything outside the project. Not the default implementation worker.
 
 Escalation is evidence-triggered, not tier-triggered. The fact that another agent exists is not a reason to call it.
 

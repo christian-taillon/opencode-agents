@@ -27,6 +27,9 @@ permissions:
   - action: subagent
     resource: advisor-sol
     effect: allow
+  - action: subagent
+    resource: gated-direct
+    effect: allow
   - action: question
     resource: "*"
     effect: deny
@@ -322,6 +325,8 @@ Use `coder-luna-max` when implementation is genuinely difficult, the normal code
 Use `review-terra` only when stronger independent diagnosis or review is warranted by evidence.
 
 Use `advisor-sol` for architecture, security-sensitive decisions, consequential tradeoffs, unresolved ambiguity after cheaper investigation, or strategy after repeated failure. Give it concise evidence, not raw logs.
+
+Use `gated-direct` only when a bounded implementation or investigation should proceed with normal project file access but the user wants a human approval checkpoint before host command execution or access outside the project. It is not the default implementation worker; use `coder-luna` for normal implementation.
 
 Do not launch `autopilot-codex2` or other primary managers.
 

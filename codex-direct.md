@@ -66,6 +66,9 @@ permissions:
   - action: subagent
     resource: ops-autopilot-ollama
     effect: allow
+  - action: subagent
+    resource: gated-direct
+    effect: allow
   - action: shell
     resource: "git push --force*"
     effect: deny
@@ -154,6 +157,8 @@ Use `review-terra` only when an independent reasoning trajectory can plausibly c
 Use `advisor-sol` for architecture, security boundaries, consequential tradeoffs, conflicting evidence, or strategy after repeated failure. Give it a concise evidence package, not raw logs.
 
 Use `ops-autopilot-ollama` only for a large, bounded, low/moderate-intelligence operational workstream whose context or steps would otherwise consume substantial premium-model context. Suitable examples include broad inventory, documentation/repository synthesis, many mechanical checks, or a long test/CI workflow. It is deliberately unable to implement code. Give explicit scope and stop criteria.
+
+Use `gated-direct` only when the user wants a bounded implementation or investigation to proceed with normal project file access but with a human approval checkpoint before host command execution or access outside the project. It is not a default implementation worker; route normal work to yourself or `coder-luna` instead.
 
 Never invoke agents as a fixed escalation ladder. Stop after sufficient evidence.
 

@@ -18,9 +18,11 @@ Review each agent's model and permissions before use. Model availability depends
 - `autopilot-codex.md` and its workers provide the established OpenAI-oriented lane.
 - `autopilot-codex2.md` and its workers use native OpenCode V2 agent syntax for interactive cycle management.
 - `orchestrator-codex.md` owns a bulk workstream via `/program` until complete, blocked, or out of scope. It reuses the Codex2 workers and does not replace `autopilot-codex2`.
+- `gated-direct.md` is a human-gated direct engineering agent. It can be selected directly or invoked by permitted parent agents (`codex-direct`, `autopilot-codex2`, `orchestrator-codex`). Project file reads and edits are normal, but every shell command and any access outside the current project/worktree require explicit approval. It does not launch further subagents.
 - `autopilot-ollama.md` and the `*-ollama.md` workers provide the Ollama Cloud lane.
 - `contained*.md` separates local code authority from internet research.
 - `config.md`, `github*.md`, and `cloudflare-expert.md` provide specialized configuration and platform workflows.
+- `tutor-luna.md` is a human-facing Socratic programming and engineering tutor. It teaches from repository context through questions and progressive hints, but intentionally does not write solutions or delegate implementation work; it is separate from the implementation and orchestration lanes.
 
 OpenCode V2 accepts V1-compatible agent definitions. This repository intentionally contains both styles because the two autopilot lanes target different tested runtimes; it does not normalize working definitions merely for stylistic consistency.
 
