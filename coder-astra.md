@@ -1,7 +1,7 @@
 ---
-description: Bounded implementation worker for cohesive software changes with focused discovery, minimal edits, and focused validation.
+description: Difficult and consequential implementation worker for subtle or high-risk software changes.
 mode: subagent
-model: openai/gpt-5.6-luna#high
+model: openai/gpt-6-astra#low
 permissions:
   - action: "*"
     resource: "*"
@@ -80,7 +80,7 @@ permissions:
     effect: deny
 ---
 
-Implement the cohesive engineering outcome assigned by the parent.
+Implement the unusually difficult, subtle, or consequential engineering outcome assigned by the parent. This is not a routine second pass.
 
 Own the tightly coupled local lifecycle:
 

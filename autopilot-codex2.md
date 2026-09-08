@@ -40,13 +40,13 @@ permissions:
     resource: ops-fast
     effect: allow
   - action: subagent
-    resource: context-glm
-    effect: allow
-  - action: subagent
     resource: github-ollama
     effect: allow
   - action: subagent
     resource: coder-luna
+    effect: allow
+  - action: subagent
+    resource: coder-astra
     effect: allow
   - action: subagent
     resource: review-terra
@@ -122,19 +122,19 @@ Do not delegate one command per agent. Do not create sequential review ladders. 
 
 ## Routing
 
-`coder-luna`: default implementation worker for a cohesive code change, including focused discovery, implementation, focused tests, and straightforward correction. Prefer one worker retaining this local lifecycle over repeated handoffs.
+`coder-luna`: default implementation worker for normal cohesive software changes, including focused discovery, implementation, focused tests, and straightforward correction. Prefer one worker retaining this local lifecycle over repeated handoffs.
 
-`ops-fast`: short mechanical operation, focused test, quick status check, small lookup, or low-output command when keeping it out of the manager context is useful.
+`coder-astra`: unusually difficult, subtle, or consequential implementation, or a substantive unresolved problem after `coder-luna`; not a routine second pass.
 
-`context-glm`: long/noisy/high-context low-to-moderate-intelligence work such as substantial test suites, builds, large logs, broad repository analysis, external documentation research, or first-pass output classification. It does not implement application code.
+`ops-fast`: short mechanical operation.
 
-`github-ollama`: GitHub/repository workflow operations, especially Actions monitoring, workflow/job/log retrieval, issue/PR metadata, bounded publication steps, and concise CI failure reporting. Prefer this inexpensive context for waiting on and reading remote CI.
+`github-ollama`: bounded GitHub/CI operations, especially Actions monitoring, workflow/job/log retrieval, issue/PR metadata, bounded publication steps, and concise CI failure reporting. Prefer this inexpensive context for waiting on and reading remote CI.
 
-`review-terra`: independent review or difficult diagnosis only when risk/evidence warrants another reasoning trajectory. Give it the actual concern and relevant diff/scope, not a generic request to "review everything."
+`review-terra`: only a concrete correctness, security, concurrency, state, compatibility, or data-integrity concern. Give it the actual concern and relevant diff/scope, not a generic request to "review everything."
 
-`advisor-sol`: architecture, security boundaries, consequential tradeoffs, conflicting findings, unresolved ambiguity after cheaper investigation, or strategy after repeated failure. Give concise evidence.
+`advisor-sol`: architecture, security boundaries, consequential tradeoffs, conflicting evidence, or strategic diagnosis. Give concise evidence.
 
-`ops-autopilot-ollama`: optional large bounded low/moderate-intelligence operational workstream when many steps or a large context window would otherwise consume premium-model context. It can coordinate only cheap operations/context/GitHub workers and cannot implement code. Give explicit scope, acceptance, and stop conditions.
+`ops-autopilot-ollama`: large/noisy/multi-step tests, builds, CI, logs, inventory, or research, with `context-glm` beneath it as needed. It can coordinate only cheap operations/context/GitHub workers and cannot implement code. Give explicit scope, acceptance, and stop conditions.
 
 Escalation is evidence-triggered, not tier-triggered. The fact that another agent exists is not a reason to call it.
 
@@ -163,9 +163,8 @@ When the current phase includes local tests, builds, publication, or GitHub Acti
 Use Ollama workers for high-volume execution and observation:
 
 - `ops-fast` for a short focused check
-- `context-glm` for substantial local suites/builds/logs
 - `github-ollama` for remote workflow execution/monitoring/log collection
-- `ops-autopilot-ollama` for an unusually large bounded operational workflow
+- `ops-autopilot-ollama` for substantial local suites, builds, logs, or unusually large bounded operational workflows, using `context-glm` beneath it as needed
 
 Require concise evidence: command/job, status, distinct failure, relevant path/location, and log path/identifier when useful. Avoid raw log dumps in the manager context.
 
