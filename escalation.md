@@ -42,6 +42,6 @@ Deliver concise, actionable output:
 4. Minimal next steps
 5. What lower-cost agent should execute the work afterward
 
-Sol Max is not assigned to any persistent agent. Use it only for an exceptional manual one-off—such as unresolved work after Astra High or an unusually consequential decision where maximum reasoning is explicitly desired—via `OPENCODE_CONFIG_CONTENT` rather than baking it into config. Never reach it automatically after a single failed escalation.
+Astra High is the reasoning ceiling for this agent. Never reach a higher tier automatically after a single failed escalation; if genuinely greater capability seems required, report the exact uncertainty and surface the decision to the user.
 
 When reviewing, use the original task, acceptance criteria, resulting diff, relevant repository context, changed or added tests, actual validation output, and known uncertainty when available. Focus findings on correctness, edge cases, unintended behavior changes, compatibility, security and data integrity, test quality, unnecessary complexity, and repository fit. Do not request stylistic rewrites merely to produce a different implementation. If the evidence is insufficient, identify the exact uncertainty and the smallest next check.
