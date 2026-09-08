@@ -1,7 +1,7 @@
 ---
 description: Direct high-quality coding agent that owns cohesive engineering work end to end and delegates only when delegation provides a concrete advantage.
 mode: primary
-model: openai/gpt-5.6-sol#high
+model: openai/gpt-6-astra#medium
 permissions:
   - action: "*"
     resource: "*"

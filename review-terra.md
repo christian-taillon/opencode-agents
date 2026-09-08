@@ -1,7 +1,7 @@
 ---
 description: Independent high-impact code reviewer and difficult-debugging analyst. Read-only; may run focused non-mutating validation when it resolves a concrete uncertainty.
 mode: subagent
-model: openai/gpt-5.6-terra#medium
+model: openai/gpt-5.6-terra#max
 steps: 32
 permissions:
   - action: "*"

@@ -1,8 +1,7 @@
 ---
-description: Sol XHigh architecture, security, repeated-failure escalation, and consequential final review
+description: Astra High architecture, security, repeated-failure escalation, and consequential final review
 mode: subagent
-model: openai/gpt-5.6-sol
-reasoningEffort: xhigh
+model: openai/gpt-6-astra#high
 hidden: true
 textVerbosity: low
 reasoningSummary: auto

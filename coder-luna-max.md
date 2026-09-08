@@ -1,7 +1,7 @@
 ---
 description: High-reasoning implementation worker for difficult coding tasks that exceed the normal Luna High worker.
 mode: subagent
-model: openai/gpt-5.6-luna#xhigh
+model: openai/gpt-5.6-luna#max
 permissions:
   - action: "*"
     resource: "*"
