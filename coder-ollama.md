@@ -9,7 +9,21 @@ permission:
   bash:
     "*": allow
     "git push --force*": deny
+    "git push -f *": deny
     "git reset --hard*": deny
+    "git clean *": deny
+    "rm -rf /*": deny
+    "rm -rf *": deny
+    "rm -fr *": deny
+    "rm -rf ~*": deny
+    "sudo *": deny
+    "su *": deny
+    "dd if=*": deny
+    "mkfs*": deny
+    "shutdown*": deny
+    "reboot*": deny
+    "halt*": deny
+    "poweroff*": deny
   edit: allow
   write: allow
   read: allow

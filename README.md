@@ -34,7 +34,7 @@ Specialized workers are used by role: `review-terra` for independent review or d
 
 ## Model policy
 
-The current Ollama Cloud definitions use `ollama-cloud/glm-5.3` (non-Flash) for judgment agents — orchestration, planning, implementation, review, GitHub, config, and contained agents — and `ollama-cloud/glm-5.3-flash` for lightweight retrieval and operations workers. OpenAI model IDs and variants reflect the configured routing ladder and may need to be adapted to your provider catalog.
+The current Ollama Cloud policy reserves full `ollama-cloud/glm-5.3` for premium coding, planning, review, configuration, and judgment roles. `ollama-cloud/glm-5.3-flash` with low reasoning handles cheap lightweight retrieval and mechanical work, while `ollama-cloud/glm-5.3-flash#high` handles larger operational, context, GitHub, and CI work where cheap long context is valuable. OpenAI model IDs and variants reflect the configured routing ladder and may need to be adapted to your provider catalog.
 
 ## Safety
 

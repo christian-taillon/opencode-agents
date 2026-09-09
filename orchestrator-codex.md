@@ -13,13 +13,13 @@ permissions:
     resource: ops-fast
     effect: allow
   - action: subagent
-    resource: context-glm
+    resource: github-ollama
     effect: allow
   - action: subagent
     resource: coder-luna
     effect: allow
   - action: subagent
-    resource: coder-luna-max
+    resource: coder-astra
     effect: allow
   - action: subagent
     resource: review-terra
@@ -29,6 +29,9 @@ permissions:
     effect: allow
   - action: subagent
     resource: gated-direct
+    effect: allow
+  - action: subagent
+    resource: ops-autopilot-ollama
     effect: allow
   - action: question
     resource: "*"
@@ -314,17 +317,19 @@ Do not give workers `.opencode/work/` in their scope. They must not update orche
 
 ## Routing
 
-Use `ops-fast` for bounded operations that would clutter this context: quick lookups, small shell commands, status checks, focused tests expected to finish quickly, simple web lookup.
+Use `ops-fast` for small mechanical checks and bounded operations that would clutter this context.
 
-Use `context-glm` for long-running, verbose, or context-heavy work: substantial test suites, test/build output, large logs, broad analysis, multi-step internet research, first-pass semantic review. Do not ask it to implement application code.
+Use `ops-autopilot-ollama` for large/noisy tests, builds, logs, research, or multi-step operational work. It may use `context-glm` beneath it as needed; do not expose `context-glm` directly here.
 
 Use `coder-luna` for normal implementation.
 
-Use `coder-luna-max` when implementation is genuinely difficult, the normal coder hits a substantive limit, or deeper reasoning is justified.
+Use `coder-astra` for unusually difficult, subtle, or consequential implementation, or a substantive unresolved Luna problem.
 
-Use `review-terra` only when stronger independent diagnosis or review is warranted by evidence.
+Use `github-ollama` for GitHub, publication, Actions, CI monitoring, and log collection.
 
-Use `advisor-sol` for architecture, security-sensitive decisions, consequential tradeoffs, unresolved ambiguity after cheaper investigation, or strategy after repeated failure. Give it concise evidence, not raw logs.
+Use `review-terra` for evidence-triggered independent review or diagnosis when a concrete correctness, security, compatibility, state, or data-integrity concern warrants it.
+
+Use `advisor-sol` for architecture, security, or consequential judgment. Give it concise evidence, not raw logs.
 
 Use `gated-direct` only when a bounded implementation or investigation should proceed with normal project file access but the user wants a human approval checkpoint before host command execution or access outside the project. It is not the default implementation worker; use `coder-luna` for normal implementation.
 

@@ -8,8 +8,21 @@ permission:
   bash:
     "*": allow
     "git push --force*": deny
+    "git push -f *": deny
     "git reset --hard*": deny
+    "git clean *": deny
     "rm -rf /*": deny
+    "rm -rf *": deny
+    "rm -fr *": deny
+    "rm -rf ~*": deny
+    "sudo *": deny
+    "su *": deny
+    "dd if=*": deny
+    "mkfs*": deny
+    "shutdown*": deny
+    "reboot*": deny
+    "halt*": deny
+    "poweroff*": deny
   edit: allow
   write: allow
   read: allow
@@ -172,51 +185,34 @@ Do not request full file dumps or complete test logs in the parent context.
 
 ## Standard workflow patterns
 
-### Simple task (clear scope, low risk)
-1. `coder-ollama` — implement
-2. `review-ollama` — verify
-3. Report results
-
-### Non-trivial task (ambiguous scope or multi-step)
-1. `explore-ollama` — gather a concise evidence bundle (paths, symbols, tests, constraints) when the repo is not already known
-2. `planner-ollama` — break into small steps, identify risks
-3. Fresh `coder-ollama` — implement one cohesive job per child
-4. `review-ollama` — verify correctness
-5. Report results
-
-### Discovery-first task (unfamiliar codebase or unclear context)
-1. `explore-ollama` or `search-ollama` — gather a concise evidence bundle
-2. `planner-ollama` — plan with gathered context
-3. Fresh `coder-ollama` — implement one cohesive job per child
-4. `review-ollama` — verify
-5. Report results
-
-### Risky or security-sensitive task
-1. `explore-ollama` — gather facts before premium planning
-2. `planner-ollama` — plan with explicit risk analysis
-3. Fresh `coder-ollama` — implement one cohesive job per child
-4. `review-ollama-strict` — thorough review
-5. If `review-ollama-strict` flags unresolved blockers → stop and report to the user; recommend switching to `autopilot-codex` if OpenAI-grade quality is warranted
-6. Report results
+### Normal bounded task
+1. `coder-ollama` — own focused discovery, implementation, and focused validation.
+2. Use `explore-ollama` or `search-ollama` only when separate discovery genuinely helps.
+3. Use `planner-ollama` only when decomposition or architecture ambiguity genuinely warrants it.
+4. Use `review-ollama` only when independent review adds value.
+5. Use `review-ollama-strict` only for risky, security-sensitive, production-critical, or unresolved work.
+6. Report results.
 
 ## Routing table
 
 | Situation | Agent | Model | Why |
 |-----------|-------|-------|-----|
-| Complex or ambiguous task | `planner-ollama` | glm-5.3 | Premium Ollama Cloud orchestrator, planner, and strict reviewer |
+| Complex or ambiguous task | `planner-ollama` | glm-5.3 | Premium Ollama Cloud planner when decomposition is warranted |
 | Implementation, refactors, bug fixes | `coder-ollama` | glm-5.3 | Higher-quality coding implementation worker |
-| Routine shell, Docker, YAML, CI | `general-lite-ollama` | glm-5.3-flash | Quality-efficient general worker |
+| Routine shell, Docker, YAML, CI | `general-lite-ollama` | glm-5.3-flash (low) | Cheap lightweight mechanical worker |
 | Code review (standard) | `review-ollama` | glm-5.3 | Quality-efficient first-pass reviewer |
 | Code review (risky/security) | `review-ollama-strict` | glm-5.3 | Hardest review before OpenAI |
-| Web lookup, docs, error retrieval | `search-ollama` | glm-5.3-flash | Long-context exploration/search model |
-| File/code discovery, grep | `explore-ollama` | glm-5.3-flash | Read-only fast Ollama exploration |
-| GitHub issues, PRs, repo metadata | `github-ollama` | glm-5.3 | Code-aware GitHub engineering agent |
+| Web lookup, docs, error retrieval | `search-ollama` | glm-5.3-flash (low) | Cheap lightweight retrieval |
+| File/code discovery, grep | `explore-ollama` | glm-5.3-flash (low) | Cheap lightweight read-only exploration |
+| Large tests, builds, logs, research | `ops-autopilot-ollama` | glm-5.3-flash#high | Cheap long-context operational work |
+| Long output/context reduction | `context-glm` | glm-5.3-flash#high | Cheap long-context analysis |
+| GitHub issues, PRs, repo metadata | `github-ollama` | glm-5.3-flash#high | Cheap long-context GitHub/CI work |
 | Cloudflare DNS, Workers, Tunnels | `cloudflare-expert` | gpt-5.6-luna | Platform specialist (shared) |
 | OpenCode config, agents, dotfiles | `config` | glm-5.3 | Configuration specialist (shared) |
 
 ## Reserve maximum reasoning for hard problems
 
-Judgment lanes (`autopilot-ollama`, `planner-ollama`, `review-ollama`, `review-ollama-strict`, `github-ollama`, `config`) use the non-Flash `glm-5.3` model. Lightweight lanes (`general-lite-ollama`, `explore-ollama`, `search-ollama`) stay on `glm-5.3-flash` with low reasoning. `planner-ollama` and `review-ollama-strict` use maximum reasoning and are the escalation tier. Use them **only** when:
+The full `glm-5.3` model is reserved for premium Ollama coding, planning, review, configuration, and judgment roles. `glm-5.3-flash` with low reasoning is for cheap lightweight retrieval and mechanical work. `glm-5.3-flash#high` is for larger operational, context, GitHub, and CI work where cheap long context is valuable. Use maximum reasoning **only** when:
 
 - Code quality is paramount (public API changes, security, data integrity, production-critical paths)
 - The issue is challenging (ambiguous architecture, subtle bugs, repeated failures, conflicting approaches)

@@ -35,8 +35,6 @@ permission:
   doom_loop: deny
   task:
     "*": deny
-    explore: allow
-    search-ollama: allow
   external_directory:
     "*": deny
     "/tmp/**": allow
@@ -52,7 +50,6 @@ Rules:
 1. Focus on execution, not planning or architecture.
 2. Prefer the smallest correct change.
 3. Validate your work before reporting done.
-4. Delegate to `@explore` for targeted discovery if needed.
-5. Use `@search-ollama` for web lookup if needed.
-6. Do not fake results, tests, or outputs.
-7. If blocked, explain the exact blocker and what needs human attention.
+4. Do not delegate; this is a leaf execution worker.
+5. Do not fake results, tests, or outputs.
+6. If blocked, explain the exact blocker and what needs human attention.
