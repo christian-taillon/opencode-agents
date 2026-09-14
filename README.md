@@ -14,12 +14,15 @@ Copy the agents you want into `~/.config/opencode/agents/` or a project's `.open
 
 | Agent | Purpose |
 | --- | --- |
-| `luna-code` | Short, clear, low-risk implementation |
+| `luna-runner` | Cheap OpenAI utility work using Luna High |
+| `luna-code` | Bounded implementation using Luna xHigh |
 | `sol-code` | Default implementation, debugging, refactoring, and integration |
 | `astra-code` | Difficult, subtle, security-sensitive, or consequential engineering |
 | `sol-review` | Independent read-only review and difficult diagnosis |
 | `autopilot-sol` | Normal evidence-driven engineering orchestration |
 | `orchestrator-sol` | Durable long-running workstream manager and optional nested orchestrator |
+
+Use `luna-runner` for commands, tests, documentation, simple configuration, repository inspection, summarization, and mechanical low-risk edits. Use `luna-code` when the task remains bounded but needs more software-engineering judgment.
 
 Routing is evidence-driven, not a Luna -> Sol -> Astra -> review ladder. One cohesive worker should own ordinary implementation whenever possible.
 
@@ -40,6 +43,7 @@ OpenCode's built-in `explore` agent is used for generic read-only codebase scout
 ## Design
 
 - Use the cheapest capable model for the task.
+- Prefer Luna High for cheap OpenAI utility work and Luna xHigh when bounded work needs more intelligence.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
 - Keep implementation workers as leaves unless nesting has a specific purpose.
 - Offload long tests, logs, and broad synthesis so premium coding context stays focused.
