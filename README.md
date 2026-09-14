@@ -6,25 +6,77 @@ disabled: true
 
 Reusable, opinionated agent definitions for OpenCode 2.
 
-Primary agents describe **how work should be performed**. Model choice is intentionally separate because OpenCode lets you switch the active model for a primary session. Model-specific names are reserved mainly for subagents whose model must be fixed when they are delegated.
+Primary agents describe **how work should be performed**. Model choice is separate because OpenCode lets you switch the active model for a primary session. Model-specific names are used mainly for subagents whose model must be fixed when delegated.
 
 Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models and permissions.
 
+## Quick start
+
+For most engineering work:
+
+```text
+direct + Sol Medium
+```
+
+For a request where you want OpenCode to decide what should be delegated:
+
+```text
+autopilot + Sol Medium
+```
+
+For a large, multi-phase, or long-running objective:
+
+```text
+orchestrator + Sol Medium
+```
+
+Choose the workflow first, then change the primary model when the task justifies it.
+
 ## Primary workflows
 
-| Agent | Purpose |
+| Agent | Use it when |
 | --- | --- |
-| `direct` | Own one engineering task in the primary context, preserving implementation and debugging state |
-| `autopilot` | Normal engineering control plane for inspection, light direct edits, routing, and acceptance |
-| `orchestrator` | Durable long-running workstream manager for multi-phase or intentionally nested work |
-| `contained` | Security-oriented workflow that separates local execution from internet research |
-| `gated-direct` | Direct engineering with approval-gated shell and external-directory access |
-| `tutor` | Socratic programming and engineering tutoring |
-| `yolo` | High-authority direct execution when intentionally selected |
+| `direct` | You want one model to own the engineering task and preserve implementation, debugging, and validation context |
+| `autopilot` | You want the primary to inspect the repository, make small direct changes, and route substantive work to workers |
+| `orchestrator` | The objective is large, multi-phase, long-running, or benefits from durable state and context isolation |
+| `contained` | You need separation between local execution and internet research |
+| `gated-direct` | You want direct engineering with approval-gated shell and external-directory access |
+| `tutor` | You want Socratic programming and engineering tutoring |
+| `yolo` | You intentionally want high-authority direct execution |
 
-The default model in a primary file is a starting point, not part of the workflow identity. For example, `direct` can be run with Luna, Sol, or Astra depending on the task while preserving the same direct-work behavior.
+The default model in a primary file is only a starting point. A primary workflow can be loaded and then switched to another model without needing another agent definition.
+
+## Primary model selection
+
+Use **Sol Medium as the default**. It provides the best general balance for implementation quality, debugging, architecture, and orchestration.
+
+| Model | Recommended use |
+| --- | --- |
+| Luna xHigh | Cheaper, straightforward, bounded work where some quality tradeoff is acceptable |
+| Sol Medium | Default for normal software engineering and orchestration |
+| Astra Low | Hard work where more intelligence is useful without going to the normal Astra Medium tier |
+| Astra Medium | Difficult, subtle, security-sensitive, architectural, or high-consequence work |
+
+Practical defaults:
+
+```text
+Normal coding                 direct + Sol Medium
+Cheap/simple coding           direct + Luna xHigh
+Hard coding                   direct + Astra Low
+Very hard/consequential code  direct + Astra Medium
+
+Normal routed work            autopilot + Sol Medium
+Cheap/light routing           autopilot + Luna xHigh
+Difficult planning/routing    autopilot + Astra Low
+
+Long-running work             orchestrator + Sol Medium
+```
+
+For mature codebases, optimize for **quality per accepted change**, not inference cost alone. A cheaper model is not a win if it creates unnecessary abstractions, tests, wrappers, cleanup, or follow-up work.
 
 ## Delegated workers
+
+Subagents keep fixed models so routing remains deterministic.
 
 | Agent | Fixed role |
 | --- | --- |
@@ -44,20 +96,42 @@ The default model in a primary file is a starting point, not part of the workflo
 
 Containment also uses `contained-code-local`, `contained-net-research`, and `contained-text-only` as trust-boundary helpers.
 
-## Choosing a primary
+## How the main workflows differ
 
-Use `direct` when you know the task and want one model to retain the important implementation, debugging, and validation context.
+### `direct`
 
-Use `autopilot` when you want the primary to inspect the repository, make small direct changes when appropriate, and route substantive work to fixed-model workers.
+Use this when you know what you want changed and want the selected model to keep the important implementation and debugging context itself. It may offload mechanical or noisy work, but substantive implementation stays in the primary session.
 
-Use `orchestrator` when the objective is large enough to benefit from durable state, several dependent phases, context isolation, or eventual supervision by another agent.
+This is the normal choice when context preservation matters.
+
+### `autopilot`
+
+Use this when you want the primary to decide how the work should be performed. It can inspect the repository, understand files directly, update plans or documentation, make small obvious edits, and delegate substantive implementation to fixed-model workers.
+
+Typical routing:
+
+```text
+mechanical work       -> luna-runner
+normal engineering    -> sol-code
+difficult engineering -> astra-code
+independent review    -> sol-review
+short operational work -> ops-fast
+large/noisy context    -> context-glm
+```
+
+### `orchestrator`
+
+Use this for a substantial workstream rather than an ordinary request. It maintains durable work state, owns dependent phases, and can survive context compaction or eventual supervision by a higher-level agent more cleanly.
+
+It may read and edit files directly. The boundary is behavioral, not tool-based: small changes, planning, documentation, configuration, and integration are appropriate; sustained application implementation and debugging loops should usually be delegated.
 
 ## Design
 
 - Optimize for accepted code quality, not raw inference cost alone.
 - Use `luna-runner` for clearly mechanical cheap work; use `sol-code` as the normal floor for delegated software engineering.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
-- Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits. They should delegate sustained application implementation and debugging loops.
+- Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits.
+- Delegate sustained application implementation and debugging loops when separation improves context or quality.
 - Offload long tests, logs, and broad synthesis so premium engineering context stays focused.
 - Use independent review only when risk or uncertainty justifies a separate reasoning path.
 - Keep trust boundaries explicit. Contained agents separate local code authority from internet research.
