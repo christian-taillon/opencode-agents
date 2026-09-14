@@ -135,7 +135,9 @@ It may read and edit files directly. The boundary is behavioral, not tool-based:
 - Offload long tests, logs, and broad synthesis so premium engineering context stays focused.
 - Use independent review only when risk or uncertainty justifies a separate reasoning path.
 - Keep trust boundaries explicit. Contained agents separate local code authority from internet research.
-- Keep project-specific workflow policy in project-local configuration, `AGENTS.md`, or skills.
+- Keep project-specific workflow policy in the repository's canonical guidance.
+  Use `AGENTS.md` to direct agents to it; use project-local configuration for
+  capabilities and skills for specialized execution details, not policy copies.
 
 ## Nested orchestration
 
