@@ -1,5 +1,5 @@
 ---
-description: Premium Ollama Cloud strict reviewer before OpenAI escalation (glm-5.3)
+description: Premium Ollama Cloud strict reviewer before an OpenAI handoff (glm-5.3)
 mode: subagent
 model: ollama-cloud/glm-5.3
 reasoningEffort: max

@@ -36,6 +36,63 @@ permissions:
   - action: shell
     resource: "*"
     effect: ask
+  - action: shell
+    resource: "git push --force*"
+    effect: deny
+  - action: shell
+    resource: "git push -f *"
+    effect: deny
+  - action: shell
+    resource: "git push *--force*"
+    effect: deny
+  - action: shell
+    resource: "git push * -f*"
+    effect: deny
+  - action: shell
+    resource: "git reset --hard*"
+    effect: deny
+  - action: shell
+    resource: "git reset * --hard*"
+    effect: deny
+  - action: shell
+    resource: "git clean *"
+    effect: deny
+  - action: shell
+    resource: "git checkout -- *"
+    effect: deny
+  - action: shell
+    resource: "git restore *"
+    effect: deny
+  - action: shell
+    resource: "rm -rf *"
+    effect: deny
+  - action: shell
+    resource: "rm -fr *"
+    effect: deny
+  - action: shell
+    resource: "sudo *"
+    effect: deny
+  - action: shell
+    resource: "su *"
+    effect: deny
+  - action: shell
+    resource: "dd if=*"
+    effect: deny
+  - action: shell
+    resource: "mkfs*"
+    effect: deny
+  - action: shell
+    resource: "shutdown*"
+    effect: deny
+  - action: shell
+    resource: "reboot*"
+    effect: deny
+  - action: shell
+    resource: "halt*"
+    effect: deny
+  - action: shell
+    resource: "poweroff*"
+    effect: deny
   - action: webfetch
     resource: "*"
     effect: allow

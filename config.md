@@ -46,9 +46,9 @@ Before changing configuration, inspect the authoritative global files, relevant 
 
 ## Version policy
 
-- For `opencode2` and OpenCode V2, use `https://opencode.ai/v2/docs/` as the source of truth. Native V2 agent definitions use `permissions` arrays with `shell`, `subagent`, and `edit`, and model variants use `provider/model#variant`.
-- For OpenCode V1, use `https://opencode.ai/docs/`. V1 agent definitions use `permission` objects with `bash`, `task`, and separate reasoning fields.
-- V2 accepts V1 agent definitions for compatibility. Do not convert a working mixed-version configuration merely for stylistic consistency; identify the target runtime and migrate only when requested.
+- The active runtime is current OpenCode, invoked as `opencode`. Use the current official documentation and installed schemas at `https://opencode.ai/v2/docs/` as the source of truth; do not infer runtime behavior from an old executable name or documentation label. Native agent definitions use `permissions` arrays with `shell`, `subagent`, and `edit`, and model variants use `provider/model#variant`.
+- `~/.config/opencode-v1/` is an intentionally isolated, archived legacy profile only. Do not read from it, migrate from it, or point current OpenCode at it unless explicitly requested and proven necessary.
+- Current OpenCode accepts compatible legacy agent and configuration definitions. Do not convert a working mixed-format configuration merely for stylistic consistency; identify the target runtime and migrate only when requested.
 
 # OpenCode System Context & Configuration Guide
 
@@ -58,31 +58,24 @@ You are an expert on OpenCode, an open-source AI coding agent. Use the following
 
 Refer to these resources for specific syntax and options:
 
-* **OpenCode V2**: [https://opencode.ai/v2/docs/](https://opencode.ai/v2/docs/)
-* **V2 Config**: [https://opencode.ai/v2/docs/config](https://opencode.ai/v2/docs/config)
-* **V2 Agents**: [https://opencode.ai/v2/docs/agents](https://opencode.ai/v2/docs/agents)
-* **V2 Permissions**: [https://opencode.ai/v2/docs/permissions](https://opencode.ai/v2/docs/permissions)
-* **V2 Migration**: [https://opencode.ai/v2/docs/migrate-v1](https://opencode.ai/v2/docs/migrate-v1)
+* **Current OpenCode**: [https://opencode.ai/v2/docs/](https://opencode.ai/v2/docs/)
+* **Config**: [https://opencode.ai/v2/docs/config](https://opencode.ai/v2/docs/config)
+* **Agents**: [https://opencode.ai/v2/docs/agents](https://opencode.ai/v2/docs/agents)
+* **Permissions**: [https://opencode.ai/v2/docs/permissions](https://opencode.ai/v2/docs/permissions)
+* **CLI/TUI Config**: [https://opencode.ai/v2/docs/cli/config](https://opencode.ai/v2/docs/cli/config)
+* **Rules & Instructions**: [https://opencode.ai/v2/docs/instructions](https://opencode.ai/v2/docs/instructions)
+* **Tools**: [https://opencode.ai/v2/docs/tools](https://opencode.ai/v2/docs/tools)
+* **Models**: [https://opencode.ai/v2/docs/models](https://opencode.ai/v2/docs/models)
+* **Themes**: [https://opencode.ai/v2/docs/themes](https://opencode.ai/v2/docs/themes)
+* **Commands**: [https://opencode.ai/v2/docs/commands](https://opencode.ai/v2/docs/commands)
+* **Formatters**: [https://opencode.ai/v2/docs/formatters](https://opencode.ai/v2/docs/formatters)
+* **MCP Servers**: [https://opencode.ai/v2/docs/mcp-servers](https://opencode.ai/v2/docs/mcp-servers)
+* **Agent Skills**: [https://opencode.ai/v2/docs/skills](https://opencode.ai/v2/docs/skills)
+* **Plugins**: [https://opencode.ai/v2/docs/build/plugins](https://opencode.ai/v2/docs/build/plugins)
 
-* **General Config**: [https://opencode.ai/docs/config/](https://opencode.ai/docs/config/)
-* **Agents**: [https://opencode.ai/docs/agents/](https://opencode.ai/docs/agents/)
-* **Rules & Instructions**: [https://opencode.ai/docs/rules/](https://opencode.ai/docs/rules/)
-* **Tools**: [https://opencode.ai/docs/tools/](https://opencode.ai/docs/tools/)
-* **Models**: [https://opencode.ai/docs/models/](https://opencode.ai/docs/models/)
-* **Themes**: [https://opencode.ai/docs/themes/](https://opencode.ai/docs/themes/)
-* **Keybinds**: [https://opencode.ai/docs/keybinds/](https://opencode.ai/docs/keybinds/)
-* **Commands**: [https://opencode.ai/docs/commands/](https://opencode.ai/docs/commands/)
-* **Formatters**: [https://opencode.ai/docs/formatters/](https://opencode.ai/docs/formatters/)
-* **Permissions**: [https://opencode.ai/docs/permissions/](https://opencode.ai/docs/permissions/)
-* **LSP Servers**: [https://opencode.ai/docs/lsp-servers/](https://opencode.ai/docs/lsp-servers/)
-* **MCP Servers**: [https://opencode.ai/docs/mcp-servers/](https://opencode.ai/docs/mcp-servers/)
-* **ACP Support**: [https://opencode.ai/docs/acp-support/](https://opencode.ai/docs/acp-support/)
-* **Agent Skills**: [https://opencode.ai/docs/agent-skills/](https://opencode.ai/docs/agent-skills/)
-* **Custom Tools**: [https://opencode.ai/docs/custom-tools/](https://opencode.ai/docs/custom-tools/)
+## Current OpenCode configuration guide
 
-## OpenCode V1 Compatibility Guide
-
-The compact guide below describes V1-compatible configuration. For V2-native work, follow the V2 links above rather than inferring V2 fields from these examples. OpenCode is configurable through JSON or JSONC files, markdown agent definitions, and rule files.
+The compact guide below describes current JSON/JSONC configuration, Markdown agent definitions, and rule files. Existing compatible legacy fields may remain in place when they already work; use the current official schema before changing them.
 
 ### 1. Configuration Hierarchy & Precedence
 
@@ -112,6 +105,7 @@ The core `opencode.json` file uses JSON or JSONC (JSON with comments), but not e
 * `~/.config/opencode/skills/` - global agent skills.
 * `~/.config/opencode/tools/` - global custom tool definitions.
 * `~/.config/opencode/themes/` - global theme files.
+* `~/.config/opencode/cli.json` - global terminal/TUI preferences; do not create a competing `tui.json`.
 
 **Project config locations:**
 
@@ -123,11 +117,10 @@ The core `opencode.json` file uses JSON or JSONC (JSON with comments), but not e
 
 **Key Sections:**
 
-* **`theme`**: UI appearance (e.g., `"opencode"`).
+* **`agents`**: Agent definitions and routing; existing compatible `agent` entries may remain until a deliberate migration.
 * **`model`**: The default LLM model (e.g., `"anthropic/claude-sonnet-4-5"`).
-* **`provider`**: API keys and settings for LLM providers (Anthropic, OpenAI, etc.).
-* **`tools`**: Enable/Disable specific tools (e.g., `write`, `bash`).
-* **`permission`**: Control security levels for sensitive tools (options: `"ask"`, `"allow"`, `"deny"`).
+* **`providers`**: API keys and settings for LLM providers (Anthropic, OpenAI, etc.); preserve existing compatible `provider` entries unless migrating deliberately.
+* **`permissions`**: Ordered security rules for tools; preserve existing compatible `permission` entries unless migrating deliberately.
 * **`instructions`**: An array of file paths or globs pointing to extra context (e.g., `["CONTRIBUTING.md", ".cursor/rules/*.md"]`).
 
 Additional environment-specific files are not core OpenCode defaults; document them only in the project or environment where they apply.
@@ -139,20 +132,21 @@ Agents are specialized personas. They can be defined in two ways:
 **A. Inside `opencode.json`**:
 
 ```json
-"agent": {
+"agents": {
   "code-reviewer": {
     "description": "Reviews code for security",
-    "model": "anthropic/claude-sonnet-4-5",
-    "prompt": "Focus on OWASP Top 10...",
-    "tools": { "write": false, "edit": false }
+    "mode": "subagent",
+    "model": "anthropic/claude-sonnet-4-5#high",
+    "system": "Focus on OWASP Top 10...",
+    "permissions": [{ "action": "edit", "resource": "*", "effect": "deny" }]
   }
 }
 ```
 
 **B. As Markdown Files**:
-Place markdown files in `~/.config/opencode/agents/` (global) or `.opencode/agents/` (project). In this environment, global agents are managed under `@agents/` (`~/.config/opencode/agents/`), so update the relevant markdown agent file before adding inline `agent` entries to `opencode.json`.
+Place markdown files in `~/.config/opencode/agents/` (global) or `.opencode/agents/` (project). In this environment, global agents are managed under `@agents/` (`~/.config/opencode/agents/`), so update the relevant markdown agent file before adding inline `agents` entries to `opencode.json`.
 
-* **Frontmatter**: Defines metadata (description, model, tools, permissions).
+* **Frontmatter**: Defines metadata (description, model, mode, permissions).
 * **Body**: The system prompt for the agent.
 
 *Example (`.opencode/agents/doc-writer.md`):*
@@ -161,8 +155,10 @@ Place markdown files in `~/.config/opencode/agents/` (global) or `.opencode/agen
 ---
 description: Writes documentation
 mode: subagent
-tools:
-  bash: false
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
 ---
 You are a technical writer. Focus on clarity and brevity...
 ```
@@ -242,5 +238,5 @@ Commands can be defined in two locations:
 - Always back up configurations before making changes
 - Test new configurations in a safe environment
 - Keep sensitive data in environment variables, not config files
-- Do not publish raw `opencode2 debug config` output; inspect and redact diagnostics because resolved output may contain environment-provided credentials.
-- Reference: https://opencode.ai/docs/agents/ and https://opencode.ai/docs/commands/
+- Do not publish raw `opencode debug config` output; inspect and redact diagnostics because resolved output may contain environment-provided credentials.
+- Reference: https://opencode.ai/v2/docs/agents and https://opencode.ai/v2/docs/commands

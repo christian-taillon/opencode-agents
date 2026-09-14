@@ -35,7 +35,7 @@ permissions:
     resource: context-glm
     effect: allow
   - action: subagent
-    resource: github-ollama
+    resource: github
     effect: allow
   - action: shell
     resource: "git push --force*"
@@ -85,7 +85,7 @@ Suitable work:
 
 ## Bounded fan-out
 
-You may delegate only to `ops-fast`, `context-glm`, and `github-ollama`.
+You may delegate only to `ops-fast`, `context-glm`, and `github`.
 
 Use at most three child assignments total for one parent request. Prefer one cohesive child over many tiny children. Never create review chains. Your children cannot spawn further children.
 
@@ -102,7 +102,11 @@ When running validation:
 - retry a likely flaky/transient failure at most once when informative
 - distinguish introduced/code-related failures from pre-existing, environmental, and unrelated failures when evidence supports it
 
-For GitHub/CI, use `github-ollama` for workflow/job/log operations. For very long local output, use `context-glm`. For short bounded commands, use `ops-fast`.
+For repository and GitHub lifecycle work, use `github` for Git state, commits,
+branches, pushes, pull requests, releases, Actions, and focused CI/log retrieval.
+It loads applicable project-local workflow/release skills before Git mutation
+and does not implement application code or spawn workers. For very long local
+output, use `context-glm`. For short bounded commands, use `ops-fast`.
 
 Do not ask a premium parent to reason over raw logs. Return a compact evidence package:
 

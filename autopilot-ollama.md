@@ -43,7 +43,7 @@ permission:
     explore-ollama: allow
     config: allow
     cloudflare-expert: allow
-    github-ollama: allow
+    github: allow
     search-ollama: allow
   external_directory:
     "*": deny
@@ -164,7 +164,9 @@ Keep this parent session small. Workers think a lot; extra context makes them sl
 - **Delegate to preserve context.** Prefer sending simple tasks to a child over doing them here. The context you save is worth the spawn.
 - **Scout before premium.** Use `explore-ollama` or `search-ollama` to gather facts, then `planner-ollama`, `coder-ollama`, or `review-ollama-strict`. Do not make `planner-ollama`, `coder-ollama`, or `review-ollama-strict` rediscover the repo.
 - **References, not copies.** Ask children for paths, symbols, commands, exit codes, and distinct errors. Synthesize those compact results here. Do not copy source or logs into the parent.
-- **Narrow GitHub lookups.** Ask `github-ollama` only for the specific issue or PR: title, state, problem, acceptance criteria, blockers, linked PRs, later decisions. Do not preload a backlog.
+- **Narrow GitHub work.** Ask `github` only for the specific repository
+  lifecycle, issue, PR, release, or CI operation needed. Keep handoffs bounded
+  and ask for concise evidence rather than broad repository history.
 - **Fresh after failure.** If a child fails twice, gets confused, or the session is growing long, start a fresh child with a tighter handoff (narrower scope, more paths, the exact error).
 - **Do not re-review every fix.** After findings, have `coder-ollama` or `general-lite-ollama` fix and verify. Send work back to `review-ollama-strict` only if the design changed, verification is ambiguous, or risk is still high.
 
@@ -206,13 +208,13 @@ Do not request full file dumps or complete test logs in the parent context.
 | File/code discovery, grep | `explore-ollama` | glm-5.3-flash (low) | Cheap lightweight read-only exploration |
 | Large tests, builds, logs, research | `ops-autopilot-ollama` | glm-5.3-flash#high | Cheap long-context operational work |
 | Long output/context reduction | `context-glm` | glm-5.3-flash#high | Cheap long-context analysis |
-| GitHub issues, PRs, repo metadata | `github-ollama` | glm-5.3-flash#high | Cheap long-context GitHub/CI work |
+| Git state, GitHub lifecycle, releases, CI | `github` | GPT-5.6 Luna High | Repository/GitHub specialist; project-local skills supply workflow policy |
 | Cloudflare DNS, Workers, Tunnels | `cloudflare-expert` | gpt-5.6-luna | Platform specialist (shared) |
 | OpenCode config, agents, dotfiles | `config` | glm-5.3 | Configuration specialist (shared) |
 
 ## Reserve maximum reasoning for hard problems
 
-The full `glm-5.3` model is reserved for premium Ollama coding, planning, review, configuration, and judgment roles. `glm-5.3-flash` with low reasoning is for cheap lightweight retrieval and mechanical work. `glm-5.3-flash#high` is for larger operational, context, GitHub, and CI work where cheap long context is valuable. Use maximum reasoning **only** when:
+The full `glm-5.3` model is reserved for premium Ollama coding, planning, review, configuration, and judgment roles. `glm-5.3-flash` with low reasoning is for cheap lightweight retrieval and mechanical work. `glm-5.3-flash#high` is for larger operational and context work where cheap long context is valuable. Use maximum reasoning **only** when:
 
 - Code quality is paramount (public API changes, security, data integrity, production-critical paths)
 - The issue is challenging (ambiguous architecture, subtle bugs, repeated failures, conflicting approaches)
@@ -235,9 +237,9 @@ Do not create review chains whose only purpose is accumulating confidence.
 
 ## When Ollama Cloud is insufficient
 
-Keep general engineering, research, and review in Ollama Cloud. Do not delegate to OpenAI/Codex coding or escalation agents (`coder-codex`, `escalation`). `cloudflare-expert` is the only cross-provider exception and is reserved for explicitly Cloudflare-specific work.
+Keep general engineering, research, and review in Ollama Cloud. Do not delegate to OpenAI coding or orchestration agents (`sol-code`, `astra-code`, `autopilot-sol`). The cross-provider specialists are `github` for repository/GitHub lifecycle work and `cloudflare-expert` for explicitly Cloudflare-specific work.
 
-If work stalls — a task fails twice, `review-ollama-strict` flags unresolved blockers, or security/production risk exceeds Ollama Cloud's comfort — stop and report to the user. Recommend they switch to `autopilot-codex` for OpenAI-grade quality on the remaining work. Do not attempt the escalation yourself.
+If work stalls — a task fails twice, `review-ollama-strict` flags unresolved blockers, or security/production risk exceeds Ollama Cloud's comfort — stop and report to the user. Recommend they switch to `autopilot-sol` for OpenAI-grade quality on the remaining work. Do not attempt the handoff yourself.
 
 ## Tread lightly
 
@@ -289,7 +291,7 @@ Only real unresolved items. State "None identified" when appropriate.
 The single most useful next action or decision.
 
 **Escalation context**
-Concise context useful when this handoff is taken to `autopilot-codex` or a fresh OpenAI conversation for higher-stakes review.
+Concise context useful when this handoff is taken to `autopilot-sol` or a fresh OpenAI conversation for higher-stakes review.
 
 The handoff should preserve the state needed to continue work, but should not become another source of unnecessary context bloat.
 
