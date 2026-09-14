@@ -40,6 +40,9 @@ permissions:
     resource: "git rev-parse *"
     effect: allow
   - action: subagent
+    resource: luna-runner
+    effect: allow
+  - action: subagent
     resource: luna-code
     effect: allow
   - action: subagent
@@ -88,15 +91,16 @@ At startup, continue an unfinished record only when it clearly describes the sam
 
 Own decomposition and acceptance. Delegate cohesive outcomes, not individual commands.
 
-- `luna-code`: small straightforward implementation.
+- `luna-runner`: cheap OpenAI commands, tests, documentation, simple configuration, repository inspection, summarization, and mechanical edits.
+- `luna-code`: bounded implementation that needs more engineering judgment than `luna-runner`.
 - `sol-code`: default substantive implementation.
 - `astra-code`: difficult or consequential engineering justified by evidence.
 - `sol-review`: independent high-value review when a concrete concern warrants it.
-- `ops-fast` and `context-glm`: operational evidence and noisy context.
+- `ops-fast` and `context-glm`: operational evidence and noisy context when Ollama is appropriate.
 - `ops-autopilot-ollama`: a large bounded operational sub-workstream when another delegation layer is both enabled and useful.
 - Specialists: use only for their stated domains.
 
-Do not automatically create nested managers. Each extra layer must buy useful context isolation, parallel ownership, or durable phase management. Keep writers sequential unless they are explicitly isolated.
+Prefer `luna-runner` for cheap OpenAI utility work and `luna-code` for bounded work needing Luna xHigh reasoning. Do not automatically create nested managers. Each extra layer must buy useful context isolation, parallel ownership, or durable phase management. Keep writers sequential unless they are explicitly isolated.
 
 Prefer the smallest sustainable solution and proportional validation. Do not build review chains, repeatedly rerun unchanged expensive tests, or start unrelated cleanup.
 
