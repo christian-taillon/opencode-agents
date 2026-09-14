@@ -4,62 +4,57 @@ disabled: true
 
 # opencode-agents
 
-Reusable, opinionated agent definitions for [OpenCode](https://opencode.ai/).
+Reusable, opinionated agent definitions for OpenCode 2.
 
-This repository is a small agent toolbox for software engineering. It separates implementation, orchestration, review, repository operations, high-volume work, and contained research so each task can use an appropriate model and permission boundary.
+The repository separates implementation, orchestration, review, repository operations, low-cost volume work, and contained research so each task can use an appropriate model and permission boundary without unnecessary agent chains.
 
-Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models, providers, and permissions.
+Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models and permissions.
 
-## Features
+## Core engineering
 
-- **Model-aware routing:** Luna for short and bounded work, Sol for general engineering, and Astra for unusually difficult or consequential work.
-- **Dedicated orchestration:** primary agents can delegate implementation, operations, GitHub work, and independent review instead of doing everything in one context.
-- **Low-cost volume lanes:** Ollama/GLM and Luna workers handle tests, logs, searches, repository synthesis, and mechanical tasks.
-- **Independent review:** `sol-review` provides a separate read-only review context for correctness, architecture, security, compatibility, and difficult diagnosis.
-- **Permission boundaries:** destructive Git and system commands are denied broadly, while external directory access is usually approval-gated or denied.
-- **Contained workflows:** dedicated agents separate local code execution from internet research and lower-trust reasoning.
-- **Specialized agents:** repository lifecycle, OpenCode configuration, Cloudflare, exploration, and tutoring each have focused roles.
+| Agent | Purpose |
+| --- | --- |
+| `luna-code` | Short, clear, low-risk implementation |
+| `sol-code` | Default implementation, debugging, refactoring, and integration |
+| `astra-code` | Difficult, subtle, security-sensitive, or consequential engineering |
+| `sol-review` | Independent read-only review and difficult diagnosis |
+| `autopilot-sol` | Normal evidence-driven engineering orchestration |
+| `orchestrator-sol` | Durable long-running workstream manager and optional nested orchestrator |
 
-## Core engineering agents
-
-| Agent | Model | Purpose |
-| --- | --- | --- |
-| `luna-code` | GPT-5.6 Luna xHigh | Short, clear, low-risk implementation |
-| `sol-code` | GPT-5.6 Sol Medium | Default implementation, debugging, refactoring, and integration |
-| `astra-code` | GPT-6 Astra Medium | Difficult, subtle, security-sensitive, or consequential engineering |
-| `sol-review` | GPT-5.6 Sol High | Read-only independent review and difficult diagnosis |
-| `autopilot-sol` | GPT-5.6 Sol Medium | Evidence-driven engineering orchestration and acceptance decisions |
-| `orchestrator-sol` | GPT-5.6 Sol Medium | Long-running workstreams with durable state across dependent phases |
-
-`sol-code` is the default general-purpose coding agent. Use `luna-code` when the task is clearly bounded and straightforward, and select `astra-code` when the work genuinely benefits from additional capability. Routing is deliberate rather than a sequential escalation ladder.
+Routing is evidence-driven, not a Luna -> Sol -> Astra -> review ladder. One cohesive worker should own ordinary implementation whenever possible.
 
 ## Supporting agents
 
 | Area | Agents | Purpose |
 | --- | --- | --- |
-| Operations and context | `ops-autopilot-ollama`, `ops-fast`, `context-glm`, `openai-mini-runner` | Tests, builds, CI, logs, inventory, long-context analysis, and mechanical execution |
-| Ollama toolbox | `autopilot-ollama`, `coder-ollama`, `general-lite-ollama`, `explore-ollama`, `planner-ollama`, `search-ollama`, `review-ollama`, `review-ollama-strict`, `manual-ollama-high` | Cost-efficient planning, implementation, exploration, search, and review |
-| Exploration | `explore` | Fast read-only codebase exploration |
-| Repository and configuration | `github`, `config` | Git/GitHub lifecycle and OpenCode configuration management |
-| Containment | `contained`, `contained-code-local`, `contained-net-research`, `contained-net-remote`, `contained-text-only` | Separate local execution, internet access, remote research, and lower-trust reasoning |
-| Human-gated work | `gated-direct` | Normal engineering with approval required before shell or external-directory access |
-| Specialists | `cloudflare-expert`, `tutor-luna` | Cloudflare/infrastructure work and Socratic programming tutoring |
-| Manual autonomy | `yolo` | High-authority autonomous execution when intentionally selected |
+| Ollama engineering | `autopilot-ollama`, `coder-ollama`, `general-lite-ollama`, `review-ollama` | Cost-first implementation and selective review |
+| Operations | `ops-fast`, `context-glm`, `ops-autopilot-ollama` | Short checks, long/noisy context, and intentionally large operational workstreams |
+| Repository/config | `github`, `config` | Git/GitHub lifecycle and OpenCode 2 configuration |
+| Containment | `contained`, `contained-code-local`, `contained-net-research`, `contained-text-only` | Separate local execution from internet and lower-trust reasoning |
+| Human-gated work | `gated-direct` | Engineering with approval-gated shell and external-directory access |
+| Specialists | `cloudflare-expert`, `tutor-luna` | Cloudflare infrastructure and Socratic programming tutoring |
+| Manual autonomy | `yolo` | Direct high-authority execution when intentionally selected |
+
+OpenCode's built-in `explore` agent is used for generic read-only codebase scouting instead of maintaining a duplicate local explore agent.
 
 ## Design
 
-The agent set is built around a few simple ideas:
+- Use the cheapest capable model for the task.
+- Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
+- Keep implementation workers as leaves unless nesting has a specific purpose.
+- Offload long tests, logs, and broad synthesis so premium coding context stays focused.
+- Use independent review only when risk or uncertainty justifies a separate reasoning path.
+- Keep trust boundaries explicit. Contained agents separate local code authority from internet research.
+- Keep project-specific workflow policy in project-local configuration, `AGENTS.md`, or skills rather than global prompts.
 
-1. Use the cheapest capable model for the work instead of sending every task to the most expensive model.
-2. Keep implementation, review, orchestration, operations, and repository lifecycle as separate responsibilities when that separation improves context quality or safety.
-3. Offload noisy work such as tests, logs, searches, and large output analysis so premium coding context stays focused.
-4. Use fresh, read-only review when independent reasoning is more valuable than preserving implementation context.
-5. Make trust boundaries explicit. General coding agents usually ask before leaving the project directory, while contained agents use stricter isolation.
+## Nested orchestration
+
+Normal workflows are designed to work with one delegation hop.
+
+For long-running autonomous work, `orchestrator-sol` and `ops-autopilot-ollama` provide deliberate nested-manager roles. Configure OpenCode 2's `experimental.subagent_depth` only when the hierarchy requires it. Extra orchestration layers should buy real context isolation, durable phase ownership, or useful fan-out rather than becoming the default path.
 
 ## Permissions
 
-Each agent carries its own tool and command policy. Common safeguards include denying destructive Git operations, destructive system commands, and unrestricted privilege escalation. Sensitive files such as `.env` may require approval, and external directory access is intentionally limited.
+Agent files use native OpenCode 2 permission syntax with `permissions`, `shell`, and `subagent` actions. Common destructive operations are denied, external directory access is limited or approval-gated, and contained profiles use stricter separation.
 
-Project-specific trusted paths and workflow requirements should be configured locally rather than weakening the global agent definitions.
-
-Review an agent's model and permissions before installing it, especially the manual or high-authority profiles.
+Command blacklists are guardrails, not strong sandboxing. Use contained or external isolation when a real security boundary is required.
