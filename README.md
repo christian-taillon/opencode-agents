@@ -4,102 +4,62 @@ disabled: true
 
 # opencode-agents
 
-Reusable agent definitions for [OpenCode](https://opencode.ai/). Copy the
-agents you need into `~/.config/opencode/agents/` or a project's
-`.opencode/agents/` directory, then review their models and permissions.
+Reusable, opinionated agent definitions for [OpenCode](https://opencode.ai/).
 
-## OpenAI engineering architecture
+This repository is a small agent toolbox for software engineering. It separates implementation, orchestration, review, repository operations, high-volume work, and contained research so each task can use an appropriate model and permission boundary.
+
+Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models, providers, and permissions.
+
+## Features
+
+- **Model-aware routing:** Luna for short and bounded work, Sol for general engineering, and Astra for unusually difficult or consequential work.
+- **Dedicated orchestration:** primary agents can delegate implementation, operations, GitHub work, and independent review instead of doing everything in one context.
+- **Low-cost volume lanes:** Ollama/GLM and Luna workers handle tests, logs, searches, repository synthesis, and mechanical tasks.
+- **Independent review:** `sol-review` provides a separate read-only review context for correctness, architecture, security, compatibility, and difficult diagnosis.
+- **Permission boundaries:** destructive Git and system commands are denied broadly, while external directory access is usually approval-gated or denied.
+- **Contained workflows:** dedicated agents separate local code execution from internet research and lower-trust reasoning.
+- **Specialized agents:** repository lifecycle, OpenCode configuration, Cloudflare, exploration, and tutoring each have focused roles.
+
+## Core engineering agents
 
 | Agent | Model | Purpose |
 | --- | --- | --- |
-| `luna-code` | Luna xHigh | Short, clear, bounded coding |
-| `sol-code` | Sol Medium | Default software engineering |
-| `astra-code` | Astra Medium | Difficult, subtle, consequential engineering |
-| `sol-review` | Sol High | Independent review, architecture, difficult diagnosis |
-| `autopilot-sol` | Sol Medium | Strategic task orchestration |
-| `orchestrator-sol` | Sol Medium | Long-running autonomous workstreams |
+| `luna-code` | GPT-5.6 Luna xHigh | Short, clear, low-risk implementation |
+| `sol-code` | GPT-5.6 Sol Medium | Default implementation, debugging, refactoring, and integration |
+| `astra-code` | GPT-6 Astra Medium | Difficult, subtle, security-sensitive, or consequential engineering |
+| `sol-review` | GPT-5.6 Sol High | Read-only independent review and difficult diagnosis |
+| `autopilot-sol` | GPT-5.6 Sol Medium | Evidence-driven engineering orchestration and acceptance decisions |
+| `orchestrator-sol` | GPT-5.6 Sol Medium | Long-running workstreams with durable state across dependent phases |
 
-`sol-code` is the default coding agent. Choose `luna-code` deliberately for
-clearly easy work and `astra-code` deliberately when concrete evidence shows
-that additional capability matters. This is evidence-driven routing, not a
-sequential escalation ladder. Do not automatically run Luna, then Sol, then
-Astra, then review.
+`sol-code` is the default general-purpose coding agent. Use `luna-code` when the task is clearly bounded and straightforward, and select `astra-code` when the work genuinely benefits from additional capability. Routing is deliberate rather than a sequential escalation ladder.
 
-The coding agents use `mode: all` so a human can select them directly or an
-orchestrator can invoke them as subagents. `sol-review` is read-only and uses a
-fresh child context when independent reasoning is the point of the review.
-Continue the same worker task/session for cohesive follow-up when its prior
-investigation remains useful; start fresh for independent work, a different
-model, or intentional independent review.
+## Supporting agents
 
-Astra High is a manual, exceptional override only. It has no automatic route
-or dedicated agent here. Astra xHigh and Astra Max are prohibited, and Terra is
-not part of the normal coding/orchestration graph.
+| Area | Agents | Purpose |
+| --- | --- | --- |
+| Operations and context | `ops-autopilot-ollama`, `ops-fast`, `context-glm`, `openai-mini-runner` | Tests, builds, CI, logs, inventory, long-context analysis, and mechanical execution |
+| Ollama toolbox | `autopilot-ollama`, `coder-ollama`, `general-lite-ollama`, `explore-ollama`, `planner-ollama`, `search-ollama`, `review-ollama`, `review-ollama-strict`, `manual-ollama-high` | Cost-efficient planning, implementation, exploration, search, and review |
+| Exploration | `explore` | Fast read-only codebase exploration |
+| Repository and configuration | `github`, `config` | Git/GitHub lifecycle and OpenCode configuration management |
+| Containment | `contained`, `contained-code-local`, `contained-net-research`, `contained-net-remote`, `contained-text-only` | Separate local execution, internet access, remote research, and lower-trust reasoning |
+| Human-gated work | `gated-direct` | Normal engineering with approval required before shell or external-directory access |
+| Specialists | `cloudflare-expert`, `tutor-luna` | Cloudflare/infrastructure work and Socratic programming tutoring |
+| Manual autonomy | `yolo` | High-authority autonomous execution when intentionally selected |
 
-## Supporting lanes
+## Design
 
-- `autopilot-ollama.md` and the `*-ollama.md` agents handle volume work.
-  Prefer `ops-autopilot-ollama`, `context-glm`, and `ops-fast` for long tests,
-  builds, logs, inventory, and other noisy operations.
-- `github` is the repository and GitHub lifecycle specialist, using Luna High
-  for Git state, commits, branches, pull requests, releases, and CI operations.
-  Repository-specific workflow policy belongs in project-local skills rather
-  than the global agent definition.
-- `gated-direct.md` preserves a human approval boundary for shell and external
-  directory operations.
-- `contained*.md` separates local code authority from internet research.
-- `config.md`, `github.md`, and `cloudflare-expert.md` provide specialized
-  configuration, GitHub, and platform workflows.
-- `tutor-luna.md` is a separate Socratic programming tutor and does not write
-  solutions or delegate implementation.
+The agent set is built around a few simple ideas:
 
-## Migration from the previous OpenAI graph
+1. Use the cheapest capable model for the work instead of sending every task to the most expensive model.
+2. Keep implementation, review, orchestration, operations, and repository lifecycle as separate responsibilities when that separation improves context quality or safety.
+3. Offload noisy work such as tests, logs, searches, and large output analysis so premium coding context stays focused.
+4. Use fresh, read-only review when independent reasoning is more valuable than preserving implementation context.
+5. Make trust boundaries explicit. General coding agents usually ask before leaving the project directory, while contained agents use stricter isolation.
 
-| Old name | New name or disposition |
-| --- | --- |
-| `codex-direct` | `sol-code` |
-| `coder-luna` | `luna-code` |
-| `coder-astra` | `astra-code` |
-| `review-terra`, `advisor-sol` | `sol-review` |
-| `autopilot-codex`, `autopilot-codex2` | `autopilot-sol` |
-| `orchestrator-codex` | `orchestrator-sol` |
-| `coder-codex`, `coder-luna-max`, `sol-escalation`, `escalation`, `coder-quality` | Removed as duplicates or automatic escalation paths |
+## Permissions
 
-No compatibility aliases are retained. External commands, project overrides,
-or scripts that select an old name must be updated to the new name.
+Each agent carries its own tool and command policy. Common safeguards include denying destructive Git operations, destructive system commands, and unrestricted privilege escalation. Sensitive files such as `.env` may require approval, and external directory access is intentionally limited.
 
-## Safety
+Project-specific trusted paths and workflow requirements should be configured locally rather than weakening the global agent definitions.
 
-General coding and orchestration agents use `external_directory: ask`. Trusted
-external development paths should be allowed through project-local OpenCode
-configuration rather than globally weakening agent permissions.
-
-The `mode: all` coding agents keep this approval boundary when invoked as
-subagents, so legitimate external access may prompt there too. A stricter
-parent/session or project policy can still constrain a child and must not be
-bypassed. Contained and isolation-focused agents intentionally retain
-`external_directory: deny`.
-
-To avoid repeated prompts for a trusted path, append a narrow per-agent rule in
-the project's `opencode.json(c)`:
-
-```jsonc
-{
-  "agents": {
-    "sol-code": {
-      "permissions": [
-        {
-          "action": "external_directory",
-          "resource": "~/projects/shared/*",
-          "effect": "allow"
-        }
-      ]
-    }
-  }
-}
-```
-
-Permission rules are part of each agent definition. Read them before
-installation, keep credentials in environment variables, and do not publish
-resolved OpenCode diagnostics because they can contain environment-provided
-secrets.
+Review an agent's model and permissions before installing it, especially the manual or high-authority profiles.
