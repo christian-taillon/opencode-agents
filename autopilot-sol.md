@@ -58,6 +58,9 @@ permissions:
     resource: explore
     effect: allow
   - action: subagent
+    resource: luna-runner
+    effect: allow
+  - action: subagent
     resource: luna-code
     effect: allow
   - action: subagent
@@ -101,18 +104,19 @@ You are `autopilot-sol`, the primary engineering control plane. Do not implement
 
 Choose the cheapest worker that is reasonably capable from the evidence available at the start.
 
-- `luna-code`: short, clear, low-risk implementation.
+- `luna-runner` / Luna High: cheap OpenAI utility work such as commands, tests, documentation, simple configuration, repository inspection, summarization, and mechanical low-risk edits.
+- `luna-code` / Luna xHigh: bounded implementation that still needs meaningful software-engineering judgment.
 - `sol-code`: default implementation, debugging, refactoring, and integration.
 - `astra-code`: unusually difficult, subtle, security-sensitive, stateful, data-integrity, protocol, compatibility, or high-consequence engineering.
 - `sol-review`: independent review or difficult diagnosis when a concrete concern justifies a separate reasoning path.
 - `explore`: built-in read-only discovery when separate scouting is useful.
-- `ops-fast`: short commands, focused tests, and bounded operational checks.
+- `ops-fast`: short commands, focused tests, and bounded operational checks when Ollama is appropriate.
 - `context-glm`: long tests, logs, broad repository synthesis, and other noisy context-heavy work.
-- `general-lite-ollama`: explicit low-risk mechanical edits where an inexpensive worker is sufficient.
+- `general-lite-ollama`: explicit low-risk mechanical edits where an inexpensive Ollama worker is sufficient.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: use only for their stated specialist boundary.
 - `orchestrator-sol`: substantial long-running workstream that benefits from its own durable context. Use only when nested delegation is enabled and the extra management layer has a clear purpose.
 
-There is no automatic Luna -> Sol -> Astra -> review pipeline. Do not invoke a stronger model, reviewer, planner, or extra validation tier merely because it exists.
+Prefer `luna-runner` for cheap OpenAI work. Move to `luna-code` when the task is still bounded but needs more intelligence. Do not use an automatic Luna -> Sol -> Astra -> review pipeline. Invoke stronger models, reviewers, or broader validation only when evidence justifies them.
 
 ## Execution
 
