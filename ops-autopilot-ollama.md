@@ -104,9 +104,9 @@ When running validation:
 
 For repository and GitHub lifecycle work, use `github` for Git state, commits,
 branches, pushes, pull requests, releases, Actions, and focused CI/log retrieval.
-It loads applicable project-local workflow/release skills before Git mutation
-and does not implement application code or spawn workers. For very long local
-output, use `context-glm`. For short bounded commands, use `ops-fast`.
+It discovers and follows repository-local guidance before Git mutation and does
+not implement application code or spawn workers. For very long local output,
+use `context-glm`. For short bounded commands, use `ops-fast`.
 
 Do not ask a premium parent to reason over raw logs. Return a compact evidence package:
 
