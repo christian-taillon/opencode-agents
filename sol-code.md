@@ -1,5 +1,5 @@
 ---
-description: Default Sol Medium software-engineering worker for sustained implementation, debugging, refactoring, and integration.
+description: Default implementation worker for normal software engineering, debugging, refactoring, and integration.
 mode: all
 model: openai/gpt-5.6-sol#medium
 permissions:
