@@ -1,5 +1,5 @@
 ---
-description: Cost-first Ollama Cloud implementation worker for low-risk cohesive coding tasks with clear acceptance criteria.
+description: Cost-first implementation worker for bounded low-risk coding with clear acceptance criteria.
 mode: subagent
 model: ollama-cloud/glm-5.3
 permissions:
