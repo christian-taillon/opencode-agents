@@ -48,31 +48,36 @@ The default model in a primary file is only a starting point. A primary workflow
 
 ## Primary model selection
 
-Use **Sol Medium as the default**. It provides the best general balance for implementation quality, debugging, architecture, and orchestration.
+Use **Sol Medium as the default**. It provides the best general balance for implementation quality, debugging, architecture, orchestration, cost, and context growth.
+
+Do not raise reasoning effort globally as a generic quality switch. Higher effort can buy additional verification and problem solving, but it also increases token use, latency, and context pressure. Spend the extra intelligence in bounded work where the task or risk justifies it.
 
 | Model | Recommended use |
 | --- | --- |
-| Luna xHigh | Cheaper, straightforward, bounded work where some quality tradeoff is acceptable |
+| Luna High | Cheap, straightforward, bounded work where some quality tradeoff is acceptable |
 | Sol Medium | Default for normal software engineering and orchestration |
-| Astra Low | Hard work where more intelligence is useful without going to the normal Astra Medium tier |
-| Astra Medium | Difficult, subtle, security-sensitive, architectural, or high-consequence work |
+| Sol High | Bounded independent review or difficult diagnosis; not a normal long-running primary default |
+| Astra Low | First premium escalation for hard or subtle engineering where additional capability is likely to matter |
+| Astra Medium | Exceptional security-sensitive, concurrent, stateful, protocol, data-integrity, compatibility, architectural, or high-consequence work |
 
 Practical defaults:
 
 ```text
 Normal coding                 direct + Sol Medium
-Cheap/simple coding           direct + Luna xHigh
+Cheap/simple coding           direct + Luna High
 Hard coding                   direct + Astra Low
 Very hard/consequential code  direct + Astra Medium
 
 Normal routed work            autopilot + Sol Medium
-Cheap/light routing           autopilot + Luna xHigh
+Cheap/light routing           autopilot + Luna High
 Difficult planning/routing    autopilot + Astra Low
 
 Long-running work             orchestrator + Sol Medium
 ```
 
-For mature codebases, optimize for **quality per accepted change**, not inference cost alone. A cheaper model is not a win if it creates unnecessary abstractions, tests, wrappers, cleanup, or follow-up work.
+For mature codebases, optimize for **quality per accepted change**, not inference cost alone. A cheaper model is not a win if it creates unnecessary abstractions, tests, wrappers, cleanup, or follow-up work. Conversely, a higher reasoning level is not a win when it adds substantial tokens and latency without materially changing the accepted result.
+
+Grok is intentionally outside the normal repository coding ladder. Use it for external research or an independent perspective when useful rather than inserting another coding tier between Sol and Astra.
 
 ## Delegated workers
 
@@ -82,11 +87,12 @@ Subagents keep fixed models so routing remains deterministic.
 | --- | --- |
 | `luna-runner` | Luna High utility worker for commands, tests, docs, simple configuration, and mechanical edits |
 | `sol-code` | Sol Medium default delegated software-engineering worker |
-| `astra-code` | Astra Medium worker for difficult or consequential engineering |
+| `astra-code` | Astra Low first premium engineering escalation |
+| `astra-code-medium` | Astra Medium exceptional/high-consequence engineering worker |
 | `sol-review` | Sol High independent read-only review |
-| `coder-ollama` | Cost-first Ollama implementation worker |
+| `coder-ollama` | Cost-first Ollama implementation worker for bounded low-risk coding |
 | `general-lite-ollama` | Cheap Ollama mechanical/configuration worker |
-| `review-ollama` | Cost-first Ollama reviewer |
+| `review-ollama` | Cost-first Ollama reviewer; not the high-risk review tier |
 | `ops-fast` | Short operational checks and focused commands |
 | `context-glm` | Long tests, logs, repository synthesis, and other noisy context-heavy work |
 | `ops-autopilot-ollama` | Intentionally large operational sub-workstream manager |
@@ -111,13 +117,16 @@ Use this when you want the primary to decide how the work should be performed. I
 Typical routing:
 
 ```text
-mechanical work       -> luna-runner
-normal engineering    -> sol-code
-difficult engineering -> astra-code
-independent review    -> sol-review
-short operational work -> ops-fast
-large/noisy context    -> context-glm
+mechanical work            -> luna-runner
+normal engineering         -> sol-code
+hard/subtle engineering    -> astra-code
+exceptional/high-risk code -> astra-code-medium
+independent review         -> sol-review
+short operational work     -> ops-fast
+large/noisy context        -> context-glm
 ```
+
+This is not an automatic escalation ladder. Route directly to the cheapest worker that is likely to produce an acceptable result given the task shape and consequence of being wrong.
 
 ### `orchestrator`
 
@@ -125,10 +134,15 @@ Use this for a substantial workstream rather than an ordinary request. It mainta
 
 It may read and edit files directly. The boundary is behavioral, not tool-based: small changes, planning, documentation, configuration, and integration are appropriate; sustained application implementation and debugging loops should usually be delegated.
 
+Keep the durable primary at a balanced reasoning level. Push verbose tests, logs, broad repository inventory, external research, and other context-heavy work into short-lived workers and retain only compact evidence in the long-running context.
+
 ## Design
 
 - Optimize for accepted code quality, not raw inference cost alone.
-- Use `luna-runner` for clearly mechanical cheap work; use `sol-code` as the normal floor for delegated software engineering.
+- Keep Sol Medium as the normal engineering floor; do not upgrade every primary to High by default.
+- Use `luna-runner` for clearly mechanical cheap work.
+- Use Astra Low when extra intelligence is likely to affect the accepted change, and Astra Medium only when concrete risk or complexity warrants it.
+- Reserve Sol High primarily for bounded independent review or diagnosis where a fresh context makes the extra reasoning useful.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
 - Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits.
 - Delegate sustained application implementation and debugging loops when separation improves context or quality.
