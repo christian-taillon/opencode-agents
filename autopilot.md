@@ -46,6 +46,9 @@ permissions:
     resource: astra-code
     effect: allow
   - action: subagent
+    resource: astra-code-medium
+    effect: allow
+  - action: subagent
     resource: sol-review
     effect: allow
   - action: subagent
@@ -117,21 +120,24 @@ Understand the request, inspect the repository directly, identify acceptance cri
 ## Routing
 
 - `luna-runner`: cheap mechanical/tool-heavy work, focused tests, docs, simple configuration, extraction, and obvious low-risk edits.
-- `sol-code`: default delegated software engineering.
-- `astra-code`: unusually difficult, subtle, security-sensitive, stateful, protocol, compatibility, data-integrity, or high-consequence engineering.
-- `sol-review`: independent OpenAI review when risk or uncertainty justifies it.
-- `ops-fast` and `context-glm`: operational work and noisy context.
-- `coder-ollama`, `general-lite-ollama`, and `review-ollama`: cost-first Ollama implementation, mechanical work, or review when appropriate.
+- `sol-code`: default delegated software engineering and the normal floor for substantive implementation.
+- `astra-code`: Astra Low first premium escalation for hard, ambiguous, or subtle engineering where stronger reasoning is likely to improve the accepted change.
+- `astra-code-medium`: exceptional engineering where concrete security, concurrency, state, data-integrity, protocol, compatibility, or high-consequence risk justifies Astra Medium, or where lower-cost workers leave material unresolved uncertainty.
+- `sol-review`: bounded independent Sol High review when risk or uncertainty justifies a fresh reasoning path. Do not use it as a routine implementation escalation.
+- `ops-fast` and `context-glm`: operational work and noisy context that should stay out of premium engineering context.
+- `coder-ollama`, `general-lite-ollama`, and `review-ollama`: intentionally cost-first Ollama implementation, mechanical work, or review. Do not substitute them for quality-critical Sol/Astra work merely to save inference cost.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 - `orchestrator`: a substantial long-running workstream that benefits from durable state or its own delegated context. Use only when the extra management layer has a clear purpose and runtime nesting permits it.
 
-Do not use an automatic escalation ladder. Choose the cheapest worker that is likely to produce an acceptable result, but optimize for accepted code quality rather than raw inference cost. Prefer `sol-code` for real software engineering unless the task is clearly mechanical enough for `luna-runner` or explicitly suited to a cost-first Ollama worker.
+Do not use an automatic escalation ladder. Route by task shape, risk, and evidence. Sol Medium should remain the normal implementation default. Use Astra Low only when extra capability is likely to matter, and Astra Medium only when the additional risk or unresolved complexity justifies its higher cost. Higher reasoning effort is not a default quality switch: it also increases tokens, latency, and context pressure.
 
 ## Execution
 
 Prefer one cohesive implementation worker over chains of tiny agents. Give workers the objective, relevant files or symbols, constraints, acceptance criteria, expected validation, and concise return format. Keep dependent writers sequential. Parallelize only genuinely independent work.
 
 Inspect important files and returned diffs yourself when that improves delegation or acceptance. Small direct edits are appropriate when spawning a worker would add more overhead than judgment, but do not absorb sustained implementation into this control-plane context.
+
+Protect the primary context. Offload verbose tests, logs, broad inventories, and large research synthesis to short-lived operational workers, and ask them to return compact evidence rather than raw output.
 
 Prefer reuse, deletion, consolidation, and standard mechanisms before new abstractions, dependencies, configuration, or compatibility layers. Validation should be proportional to risk and acceptance criteria. Avoid repeated unchanged expensive checks.
 
