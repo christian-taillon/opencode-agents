@@ -1,5 +1,5 @@
 ---
-description: Cheap OpenAI utility worker for mechanical edits, commands, tests, documentation, and bounded tool-heavy tasks.
+description: Mechanical utility worker for explicit low-risk edits, commands, focused tests, documentation, and simple configuration.
 mode: subagent
 model: openai/gpt-5.6-luna#high
 permissions:
