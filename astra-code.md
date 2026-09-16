@@ -1,5 +1,5 @@
 ---
-description: Astra Low implementation worker for hard or subtle engineering that merits more capability than Sol Medium without paying Astra Medium cost and context by default.
+description: Implementation worker for hard or subtle engineering involving ambiguity, interacting contracts, difficult debugging, or nontrivial design judgment.
 mode: all
 model: openai/gpt-6-astra#low
 permissions:
