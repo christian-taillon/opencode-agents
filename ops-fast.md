@@ -1,5 +1,5 @@
 ---
-description: Fast low-cost operations worker for bounded repository inspection, quick commands, focused tests, and small lookups.
+description: Bounded operations worker for quick repository inspection, commands, focused tests, and small lookups.
 mode: subagent
 model: ollama-cloud/glm-5.3-flash#low
 steps: 16
