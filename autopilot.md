@@ -78,9 +78,6 @@ permissions:
   - action: subagent
     resource: gated-direct
     effect: allow
-  - action: subagent
-    resource: orchestrator
-    effect: allow
   - action: shell
     resource: "git push --force*"
     effect: deny
@@ -127,7 +124,8 @@ Understand the request, inspect the repository directly, identify acceptance cri
 - `ops-fast` and `context-glm`: operational work and noisy context that should stay out of premium engineering context.
 - `coder-ollama`, `general-lite-ollama`, and `review-ollama`: intentionally cost-first Ollama implementation, mechanical work, or review. Do not substitute them for quality-critical Sol/Astra work merely to save inference cost.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
-- `orchestrator`: a substantial long-running workstream that benefits from durable state or its own delegated context. Use only when the extra management layer has a clear purpose and runtime nesting permits it.
+
+`orchestrator` is a user-selected primary workflow for substantial long-running workstreams, not an automatic child route from `autopilot`.
 
 Do not use an automatic escalation ladder. Route by task shape, risk, and evidence. Sol Medium should remain the normal implementation default. Use Astra Low only when extra capability is likely to matter, and Astra Medium only when the additional risk or unresolved complexity justifies its higher cost. Higher reasoning effort is not a default quality switch: it also increases tokens, latency, and context pressure.
 
