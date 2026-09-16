@@ -1,5 +1,5 @@
 ---
-description: Long-context low-cost analysis and operations worker for tests, builds, logs, repository synthesis, research, verification, and output classification. Does not implement application code.
+description: No-edit analysis worker for long tests, logs, repository synthesis, research, and other noisy context-heavy work.
 mode: subagent
 model: ollama-cloud/glm-5.3-flash#high
 steps: 48
