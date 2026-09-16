@@ -1,5 +1,5 @@
 ---
-description: Cost-first Ollama Cloud independent reviewer for a cheap second look at correctness, security, maintainability, and validation gaps.
+description: Cost-first read-only second-opinion reviewer for non-consequential changes.
 mode: subagent
 model: ollama-cloud/glm-5.3
 permissions:
