@@ -1,7 +1,7 @@
 ---
 description: Primary engineering router that inspects the repository, handles small direct changes, and delegates substantive work to the appropriate specialist.
 mode: primary
-model: openai/gpt-5.6-sol#medium
+model: openai/gpt-5.6-sol#high
 permissions:
   - action: "*"
     resource: "*"

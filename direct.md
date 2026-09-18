@@ -1,7 +1,7 @@
 ---
 description: Direct engineering primary that preserves implementation, debugging, and validation context in one session.
 mode: primary
-model: openai/gpt-5.6-sol#medium
+model: openai/gpt-6-astra#medium
 permissions:
   - action: "*"
     resource: "*"
