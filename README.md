@@ -24,6 +24,12 @@ For a request where you want OpenCode to decide what should be delegated:
 autopilot + Sol Medium
 ```
 
+For routed engineering that must stay entirely on Ollama:
+
+```text
+autopilot-ollama
+```
+
 For a large, multi-phase, or long-running objective:
 
 ```text
@@ -38,6 +44,7 @@ Choose the workflow first, then change the primary model when the task justifies
 | --- | --- |
 | `direct` | You want one model to own the engineering task and preserve implementation, debugging, and validation context |
 | `autopilot` | You want the primary to inspect the repository, make small direct changes, and route substantive work to workers |
+| `autopilot-ollama` | You want general routed engineering to remain entirely on Ollama-backed models without consuming OpenAI inference credits |
 | `orchestrator` | The objective is large, multi-phase, long-running, or benefits from durable state and context isolation |
 | `contained` | You need separation between local execution and internet research |
 | `gated-direct` | You want direct engineering with approval-gated shell and external-directory access |
@@ -71,6 +78,7 @@ Very hard/consequential code  direct + Astra Medium
 Normal routed work            autopilot + Sol Medium
 Cheap/light routing           autopilot + Luna High
 Difficult planning/routing    autopilot + Astra Low
+Ollama-only routed work       autopilot-ollama
 
 Long-running work             orchestrator + Sol Medium
 ```
@@ -127,6 +135,24 @@ large/noisy context        -> context-glm
 ```
 
 This is not an automatic escalation ladder. Route directly to the cheapest worker that is likely to produce an acceptable result given the task shape and consequence of being wrong.
+
+### `autopilot-ollama`
+
+Use this when you want the same general routing pattern but intentionally want the entire model path to remain on Ollama-backed agents.
+
+Typical routing:
+
+```text
+bounded implementation      -> coder-ollama
+mechanical/config work      -> general-lite-ollama
+independent cheap review    -> review-ollama
+short operational work     -> ops-fast
+large/noisy context        -> context-glm
+large operational work     -> ops-autopilot-ollama
+OpenCode configuration     -> config
+```
+
+It has no permission to delegate to OpenAI-backed workers. If the task develops security-sensitive behavior, subtle concurrency/state, consequential architecture, difficult protocol or compatibility constraints, data-integrity risk, or material unresolved uncertainty, it should stop and report the escalation need rather than silently consuming premium credits.
 
 ### `orchestrator`
 
