@@ -24,6 +24,39 @@ permissions:
   - action: read
     resource: "*.env.example"
     effect: allow
+  - action: read
+    resource: "*.pem"
+    effect: ask
+  - action: read
+    resource: "*.key"
+    effect: ask
+  - action: read
+    resource: "*id_rsa*"
+    effect: ask
+  - action: read
+    resource: "*id_ed25519*"
+    effect: ask
+  - action: read
+    resource: "*.p12"
+    effect: ask
+  - action: read
+    resource: "*.pfx"
+    effect: ask
+  - action: read
+    resource: "*.tfstate"
+    effect: ask
+  - action: read
+    resource: "*.tfstate.*"
+    effect: ask
+  - action: read
+    resource: "*.npmrc"
+    effect: ask
+  - action: read
+    resource: "*.pypirc"
+    effect: ask
+  - action: read
+    resource: "*.netrc"
+    effect: ask
   - action: glob
     resource: "*"
     effect: allow
@@ -33,9 +66,27 @@ permissions:
   - action: edit
     resource: "*"
     effect: allow
+  - action: edit
+    resource: ".github/workflows/*"
+    effect: ask
+  - action: edit
+    resource: ".gitlab-ci.yml"
+    effect: ask
+  - action: edit
+    resource: ".git/hooks/*"
+    effect: ask
   - action: shell
     resource: "*"
     effect: ask
+  - action: shell
+    resource: "git status"
+    effect: allow
+  - action: shell
+    resource: "git status --short"
+    effect: allow
+  - action: shell
+    resource: "git status --porcelain*"
+    effect: allow
   - action: shell
     resource: "git push --force*"
     effect: deny
@@ -58,6 +109,18 @@ permissions:
     resource: "git clean *"
     effect: deny
   - action: shell
+    resource: "git branch -D *"
+    effect: deny
+  - action: shell
+    resource: "git stash drop *"
+    effect: deny
+  - action: shell
+    resource: "git stash clear*"
+    effect: deny
+  - action: shell
+    resource: "git reflog expire *"
+    effect: deny
+  - action: shell
     resource: "git checkout -- *"
     effect: deny
   - action: shell
@@ -76,10 +139,22 @@ permissions:
     resource: "su *"
     effect: deny
   - action: shell
-    resource: "dd if=*"
+    resource: "dd *"
     effect: deny
   - action: shell
     resource: "mkfs*"
+    effect: deny
+  - action: shell
+    resource: "shred *"
+    effect: deny
+  - action: shell
+    resource: "wipefs *"
+    effect: deny
+  - action: shell
+    resource: "fdisk *"
+    effect: deny
+  - action: shell
+    resource: "parted *"
     effect: deny
   - action: shell
     resource: "shutdown*"
@@ -128,11 +203,11 @@ Permission prompts are an intentional human-control boundary. Never evade or wea
 
 Shell runs with the host user's filesystem, process, and network authority, and shell path checks cover the working directory, not every path embedded in a command. Treat gaps between shell and filesystem permission checking as boundaries to respect, never gaps to exploit. When a command must touch outside paths, request that external access explicitly.
 
-Keep each shell request reasoned, scoped to the task, and the minimum command that obtains the evidence. Do not batch unrelated operations to reduce approvals, hide mutations inside long chains, or repeatedly request optional commands. If the user rejects a command, respect that and continue without it. Never claim a test, build, command, or runtime validation succeeded unless it actually ran.
+Keep each shell request reasoned, scoped to the task, and the minimum command that obtains the evidence. A very small set of exact repository-status commands may run without approval; do not generalize those exceptions to path-bearing inspection commands. Known destructive Git and host-management commands are denied outright. Do not batch unrelated operations to reduce approvals, hide mutations inside long chains, or repeatedly request optional commands. If the user rejects a command, respect that and continue without it. Never claim a test, build, command, or runtime validation succeeded unless it actually ran.
 
 ## Project and external files
 
-Inside the project: inspect and edit freely, understand existing patterns before changing them, prefer the smallest coherent change, and leave unrelated user work untouched. `.env` and `.env.*` reads stay approval-gated; `.env.example` does not.
+Inside the project: inspect and edit freely, understand existing patterns before changing them, prefer the smallest coherent change, and leave unrelated user work untouched. Reads of `.env`, `.env.*`, private-key material, certificate bundles, Terraform state, and common package-registry credential files stay approval-gated; `.env.example` does not. Edits to CI workflow files and Git hooks also require approval because they can change execution or trust boundaries.
 
 Anything outside the project/worktree goes through the external-directory boundary. Ask only for the narrow access needed; assume nothing outside — home, configuration directories, sibling repositories, `/tmp`, `/etc`, SSH configuration, credentials — is pre-authorized.
 
