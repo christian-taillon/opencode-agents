@@ -49,7 +49,7 @@ permissions:
     resource: ops-fast
     effect: allow
   - action: subagent
-    resource: context-glm
+    resource: ops-context
     effect: allow
   - action: subagent
     resource: ops-autopilot-ollama
@@ -109,8 +109,8 @@ Do not turn primary edit permission into a second sustained implementation path.
 - `general-lite-ollama`: routine mechanical edits, shell work, YAML, CI configuration, documentation, and straightforward operational changes.
 - `review-ollama`: independent cost-first read-only review for non-consequential changes.
 - `ops-fast`: quick repository inspection, targeted commands, focused tests, and short operational checks.
-- `context-glm`: long tests, large logs, broad repository synthesis, research, and other context-heavy analysis.
 - `ops-autopilot-ollama`: a large bounded operational workstream involving multiple test, CI, log, inventory, or research stages.
+- `ops-context`: long tests, large logs, broad repository synthesis, research, and other context-heavy analysis.
 - `config`: OpenCode 2 configuration and documentation work.
 
 Prefer one cohesive worker over chains of tiny agents. Use `ops-autopilot-ollama` only when its extra orchestration layer buys meaningful context isolation or fan-out.

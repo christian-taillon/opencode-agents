@@ -32,7 +32,7 @@ permissions:
     resource: ops-fast
     effect: allow
   - action: subagent
-    resource: context-glm
+    resource: ops-context
     effect: allow
   - action: subagent
     resource: github
@@ -85,7 +85,7 @@ Suitable work:
 
 ## Bounded fan-out
 
-You may delegate only to `ops-fast`, `context-glm`, and `github`.
+You may delegate only to `ops-fast`, `ops-context`, and `github`.
 
 Use at most three child assignments total for one parent request. Prefer one cohesive child over many tiny children. Never create review chains. Your children cannot spawn further children.
 
@@ -106,7 +106,7 @@ For repository and GitHub lifecycle work, use `github` for Git state, commits,
 branches, pushes, pull requests, releases, Actions, and focused CI/log retrieval.
 It discovers and follows repository-local guidance before Git mutation and does
 not implement application code or spawn workers. For very long local output,
-use `context-glm`. For short bounded commands, use `ops-fast`.
+use `ops-context`. For short bounded commands, use `ops-fast`.
 
 Do not ask a premium parent to reason over raw logs. Return a compact evidence package:
 

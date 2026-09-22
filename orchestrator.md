@@ -55,7 +55,7 @@ permissions:
     resource: ops-fast
     effect: allow
   - action: subagent
-    resource: context-glm
+    resource: ops-context
     effect: allow
   - action: subagent
     resource: ops-autopilot-ollama
@@ -131,7 +131,7 @@ Delegate cohesive outcomes, not individual commands.
 - `astra-code`: Astra Low first premium escalation for hard, ambiguous, or subtle engineering where stronger reasoning is likely to improve the accepted change.
 - `astra-code-medium`: exceptional security-sensitive, concurrent, stateful, protocol, compatibility, data-integrity, high-consequence, or materially unresolved engineering that justifies Astra Medium.
 - `sol-review`: independent bounded Sol High review when a concrete concern warrants a fresh reasoning path.
-- `ops-fast` and `context-glm`: operational evidence and noisy context that should not accumulate in the durable premium context.
+- `ops-fast` and `ops-context`: operational evidence and noisy context that should not accumulate in the durable premium context.
 - `ops-autopilot-ollama`: a large bounded operational sub-workstream when another delegation layer is enabled and genuinely useful.
 - `coder-ollama`, `general-lite-ollama`, and `review-ollama`: intentionally cost-first Ollama work where the quality/risk tradeoff is acceptable.
 - Specialists: use only for their stated domains.

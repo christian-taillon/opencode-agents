@@ -52,7 +52,7 @@ permissions:
     resource: ops-fast
     effect: allow
   - action: subagent
-    resource: context-glm
+    resource: ops-context
     effect: allow
   - action: subagent
     resource: github
@@ -97,7 +97,7 @@ Protect the primary context from work that does not require primary-model engine
 
 - `luna-runner`: mechanical edits, straightforward follow-up changes, formatting, documentation, simple configuration, and focused validation after the implementation approach is already known.
 - `ops-fast`: quick repository inspection, simple shell commands, targeted checks, focused tests, and other short operational tasks.
-- `context-glm`: broad or potentially long-running tests or builds, `cargo test` or workspace-wide validation, large compiler or test logs, large diffs, repository-wide inspection, CI output, and other context-heavy analysis.
+- `ops-context`: broad or potentially long-running tests or builds, `cargo test` or workspace-wide validation, large compiler or test logs, large diffs, repository-wide inspection, CI output, and other context-heavy analysis.
 - `github`: commits, branches, pushes, pull requests, releases, and CI lifecycle work.
 
 Do not personally consume large command output merely because the command is easy to run. Delegate evidence collection when the result may be lengthy and have the worker return only the material findings. Keep substantive implementation, architectural decisions, ambiguous debugging, and final engineering judgment in this session. Do not delegate substantive application implementation to another coding worker.

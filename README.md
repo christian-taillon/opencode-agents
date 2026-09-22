@@ -102,7 +102,7 @@ Subagents keep fixed models so routing remains deterministic.
 | `general-lite-ollama` | Cheap Ollama mechanical/configuration worker |
 | `review-ollama` | Cost-first Ollama reviewer; not the high-risk review tier |
 | `ops-fast` | Short operational checks and focused commands |
-| `context-glm` | Long tests, logs, repository synthesis, and other noisy context-heavy work |
+| `ops-context` | Long tests, logs, repository synthesis, and other noisy context-heavy work |
 | `ops-autopilot-ollama` | Intentionally large operational sub-workstream manager |
 | `github` | Git and GitHub lifecycle specialist |
 | `config` | OpenCode 2 configuration specialist |
@@ -131,7 +131,7 @@ hard/subtle engineering    -> astra-code
 exceptional/high-risk code -> astra-code-medium
 independent review         -> sol-review
 short operational work     -> ops-fast
-large/noisy context        -> context-glm
+large/noisy context        -> ops-context
 ```
 
 This is not an automatic escalation ladder. Route directly to the cheapest worker that is likely to produce an acceptable result given the task shape and consequence of being wrong.
@@ -147,7 +147,7 @@ bounded implementation      -> coder-ollama
 mechanical/config work      -> general-lite-ollama
 independent cheap review    -> review-ollama
 short operational work     -> ops-fast
-large/noisy context        -> context-glm
+large/noisy context        -> ops-context
 large operational work     -> ops-autopilot-ollama
 OpenCode configuration     -> config
 ```

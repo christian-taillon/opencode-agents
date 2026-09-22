@@ -55,7 +55,7 @@ permissions:
     resource: ops-fast
     effect: allow
   - action: subagent
-    resource: context-glm
+    resource: ops-context
     effect: allow
   - action: subagent
     resource: coder-ollama
@@ -121,7 +121,7 @@ Understand the request, inspect the repository directly, identify acceptance cri
 - `astra-code`: Astra Low first premium escalation for hard, ambiguous, or subtle engineering where stronger reasoning is likely to improve the accepted change.
 - `astra-code-medium`: exceptional engineering where concrete security, concurrency, state, data-integrity, protocol, compatibility, or high-consequence risk justifies Astra Medium, or where lower-cost workers leave material unresolved uncertainty.
 - `sol-review`: bounded independent Sol High review when risk or uncertainty justifies a fresh reasoning path. Do not use it as a routine implementation escalation.
-- `ops-fast` and `context-glm`: operational work and noisy context that should stay out of premium engineering context.
+- `ops-fast` and `ops-context`: operational work and noisy context that should stay out of premium engineering context.
 - `coder-ollama`, `general-lite-ollama`, and `review-ollama`: intentionally cost-first Ollama implementation, mechanical work, or review. Do not substitute them for quality-critical Sol/Astra work merely to save inference cost.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 
