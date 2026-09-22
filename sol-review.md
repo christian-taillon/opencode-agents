@@ -1,7 +1,7 @@
 ---
 description: Read-only Sol High reviewer for concrete correctness, architecture, security-boundary, compatibility, and difficult-diagnosis concerns.
 mode: subagent
-model: openai/gpt-5.6-sol#high
+model: openai/gpt-6-sol#high
 steps: 32
 permissions:
   - action: "*"
