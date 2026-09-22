@@ -1,7 +1,7 @@
 ---
 description: Mechanical utility worker for explicit low-risk edits, commands, focused tests, documentation, and simple configuration.
 mode: subagent
-model: openai/gpt-5.6-luna#high
+model: openai/gpt-6-luna#high
 permissions:
   - action: "*"
     resource: "*"
