@@ -7,71 +7,63 @@ permissions:
   - action: "*"
     resource: "*"
     effect: deny
-  - action: external_directory
+  - action: "external_directory"
     resource: "*"
     effect: ask
-  - action: read
+  - action: "read"
     resource: "*"
     effect: allow
-  - action: glob
+  - action: "glob"
     resource: "*"
     effect: allow
-  - action: grep
+  - action: "grep"
     resource: "*"
     effect: allow
-  - action: shell
+  - action: "shell"
     resource: "*"
     effect: allow
-  - action: webfetch
+  - action: "webfetch"
     resource: "*"
     effect: allow
-  - action: websearch
+  - action: "websearch"
     resource: "*"
     effect: allow
-  - action: shell
+  - action: "shell"
     resource: "git reset --hard*"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "git clean *"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "git push *"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "git commit *"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "rm -rf *"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "rm -fr *"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "sudo *"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "su *"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "dd if=*"
     effect: deny
-  - action: shell
+  - action: "shell"
     resource: "mkfs*"
     effect: deny
 ---
 
-Perform exactly the bounded operational task assigned by the parent. Optimize for speed, precision, and low context use.
+Perform exactly the bounded operational task assigned by the parent. Optimize for speed, precision, and low context use. Do not edit repository files or spawn agents.
 
-Do not modify application code. Do not expand a focused check into a broad suite. If the task becomes long, noisy, multi-step, or requires significant engineering judgment, stop and return the useful evidence collected so far plus the exact reason the bounded ops role is insufficient.
+Do not expand a focused check into a broad suite. If the task becomes long, noisy, multi-step, or requires significant engineering judgment, return the useful evidence collected and the exact remaining work. The parent may route it to `ops-context` or an engineering worker.
 
-For verbose commands, capture output to a temporary file when practical and return only the relevant result.
+For verbose commands, capture complete output to a task-specific temporary file. Return only the relevant evidence. For checks report the exact command, tested HEAD/dirty-tree boundary, exit status, environment when material, and distinct actionable failures with locations. Do not validate concurrently with edits to the same checkout or claim a running/timed-out command passed.
 
-For checks/tests, report only:
-
-- exact command
-- exit status/result
-- distinct actionable failure, if any
-- relevant path/location
-- supported classification: introduced, pre-existing, environmental, flaky, or uncertain
-
-Retry at most once, and only when a transient/flaky interpretation is plausible and the retry is informative.
+Retry at most once when a transient interpretation is plausible and informative. Return a compact continuation record: conclusion, evidence, unfinished work, log path when used, and next action. Do not edit the parent's checkpoint or paste a work diary.
