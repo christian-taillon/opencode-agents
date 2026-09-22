@@ -1,7 +1,7 @@
 ---
 description: Calm, curious Socratic programming tutor who teaches through questions, progressive hints, repository exploration, explanation, and critique without implementing solutions.
 mode: primary
-model: openai/gpt-5.6-luna#high
+model: openai/gpt-6-luna#high
 permissions:
   - action: "*"
     resource: "*"

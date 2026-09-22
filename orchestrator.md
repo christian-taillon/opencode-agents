@@ -1,7 +1,7 @@
 ---
 description: Model-switchable durable workstream manager for long-running, multi-phase engineering objectives and intentional nested orchestration.
 mode: all
-model: openai/gpt-5.6-sol#medium
+model: openai/gpt-6-sol#medium
 permissions:
   - action: "*"
     resource: "*"
@@ -136,9 +136,9 @@ Delegate cohesive outcomes, not individual commands.
 - `coder-ollama`, `general-lite-ollama`, and `review-ollama`: intentionally cost-first Ollama work where the quality/risk tradeoff is acceptable.
 - Specialists: use only for their stated domains.
 
-Optimize for accepted code quality rather than raw inference cost, but also protect long-running context from unnecessary reasoning and verbose output. Sol Medium remains the normal default for real software engineering. Do not escalate by habit: use Astra Low or Medium only when task properties or concrete evidence justify the extra capability.
+Optimize for accepted code quality rather than raw inference cost, but also protect long-running context from unnecessary reasoning and verbose output. GPT-6 Sol Medium is the normal durable control-plane default; GPT-6 Sol High is the normal substantive implementation worker. Do not escalate by habit: use Astra Low or Medium only when task properties or concrete evidence justify the extra capability.
 
-Do not automatically create nested managers. Each extra layer must buy useful context isolation, parallel ownership, or durable phase management. Keep dependent writers sequential unless they are explicitly isolated.
+Do not automatically create nested managers. Each extra layer must buy useful context isolation, parallel ownership, durable phase management, or intentional independent reasoning. Keep dependent writers sequential unless they are explicitly isolated. Preserve accumulated decisions and recovery state in the durable primary, and avoid bouncing one dependent implementation through multiple fresh worker contexts.
 
 Prefer the smallest sustainable solution and proportional validation. Avoid review chains, repeated unchanged expensive tests, speculative cleanup, and unnecessary abstractions. Push long test output, logs, broad inventories, and large synthesis into short-lived operational contexts and retain only compact evidence in durable state.
 

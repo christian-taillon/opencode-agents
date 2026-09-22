@@ -1,7 +1,7 @@
 ---
 description: Default implementation worker for normal software engineering, debugging, refactoring, and integration.
 mode: all
-model: openai/gpt-5.6-sol#high
+model: openai/gpt-6-sol#high
 permissions:
   - action: "*"
     resource: "*"

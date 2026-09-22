@@ -15,7 +15,7 @@ Copy the agents you want into `~/.config/opencode/agents/` or a project's `.open
 For most engineering work:
 
 ```text
-direct + Sol Medium
+direct + Sol High
 ```
 
 For a request where you want OpenCode to decide what should be delegated:
@@ -55,37 +55,51 @@ The default model in a primary file is only a starting point. A primary workflow
 
 ## Primary model selection
 
-Use **Sol Medium as the default**. It provides the best general balance for implementation quality, debugging, architecture, orchestration, cost, and context growth.
+Use **Sol High for normal substantive engineering and long-lived direct sessions**. Use **Sol Medium for routing and durable orchestration** where the primary mainly decomposes, integrates, and accepts work.
 
 Do not raise reasoning effort globally as a generic quality switch. Higher effort can buy additional verification and problem solving, but it also increases token use, latency, and context pressure. Spend the extra intelligence in bounded work where the task or risk justifies it.
 
 | Model | Recommended use |
 | --- | --- |
-| Luna High | Cheap, straightforward, bounded work where some quality tradeoff is acceptable |
-| Sol Medium | Default for normal software engineering and orchestration |
-| Sol High | Bounded independent review or difficult diagnosis; not a normal long-running primary default |
+| Luna High | Cheap, straightforward, bounded utility work where substantial design judgment is not required |
+| Sol Medium | Routing, orchestration, planning, and control-plane work |
+| Sol High | Default substantive engineering, interactive direct work, difficult diagnosis, and independent review |
 | Astra Low | First premium escalation for hard or subtle engineering where additional capability is likely to matter |
 | Astra Medium | Exceptional security-sensitive, concurrent, stateful, protocol, data-integrity, compatibility, architectural, or high-consequence work |
 
 Practical defaults:
 
 ```text
-Normal coding                 direct + Sol Medium
-Cheap/simple coding           direct + Luna High
-Hard coding                   direct + Astra Low
-Very hard/consequential code  direct + Astra Medium
+Normal interactive engineering  direct + Sol High
+Hard coding                     direct + Astra Low
+Very hard/consequential code    direct + Astra Medium
 
-Normal routed work            autopilot + Sol Medium
-Cheap/light routing           autopilot + Luna High
-Difficult planning/routing    autopilot + Astra Low
-Ollama-only routed work       autopilot-ollama
+Normal routed work              autopilot + Sol Medium
+Difficult planning/routing      autopilot + Sol High
+Ollama-only routed work         autopilot-ollama
 
-Long-running work             orchestrator + Sol Medium
+Long-running work               orchestrator + Sol Medium
 ```
 
 For mature codebases, optimize for **quality per accepted change**, not inference cost alone. A cheaper model is not a win if it creates unnecessary abstractions, tests, wrappers, cleanup, or follow-up work. Conversely, a higher reasoning level is not a win when it adds substantial tokens and latency without materially changing the accepted result.
 
-Grok is intentionally outside the normal repository coding ladder. Use it for external research or an independent perspective when useful rather than inserting another coding tier between Sol and Astra.
+Grok remains outside the normal repository coding ladder. When available, use Grok 4.7 High manually with `direct` for a fresh independent perspective, especially when the current model may be stuck on one framing. Do not add it to automatic routing merely because credits are available.
+
+## Context locality and delegation
+
+Long-lived primary sessions can accumulate valuable conversation history, repository discoveries, debugging evidence, and user decisions. Stable repeated prefixes may also benefit from provider prompt caching. Treat that as an efficiency benefit, not a correctness guarantee, and avoid unnecessary context resets.
+
+A subagent should earn the context break. Delegate when it provides at least one concrete benefit:
+
+- noisy or long-running output can be kept out of the primary context;
+- independent reasoning is intentionally valuable;
+- a specialist or permission boundary is the reason for delegation;
+- genuinely independent work can proceed in parallel; or
+- a cohesive bounded worker can own the outcome without needing most of the parent's accumulated reasoning.
+
+Keep work in the current session when it depends materially on prior discussion, sequential implementation decisions, or active debugging evidence. If a child would need most of the current reasoning restated to do the task well, prefer the warm primary context unless independence is itself the objective.
+
+Do not fragment one cohesive implementation into planner, coder, reviewer, and validator sessions by default. Prefer one capable owner and delegate only the parts that benefit from separation.
 
 ## Delegated workers
 
@@ -93,11 +107,11 @@ Subagents keep fixed models so routing remains deterministic.
 
 | Agent | Fixed role |
 | --- | --- |
-| `luna-runner` | Luna High utility worker for commands, tests, docs, simple configuration, and mechanical edits |
-| `sol-code` | Sol Medium default delegated software-engineering worker |
+| `luna-runner` | GPT-6 Luna High utility worker for commands, tests, docs, simple configuration, and mechanical edits |
+| `sol-code` | GPT-6 Sol High default delegated software-engineering worker |
 | `astra-code` | Astra Low first premium engineering escalation |
 | `astra-code-medium` | Astra Medium exceptional/high-consequence engineering worker |
-| `sol-review` | Sol High independent read-only review |
+| `sol-review` | GPT-6 Sol High independent read-only review |
 | `coder-ollama` | Cost-first Ollama implementation worker for bounded low-risk coding |
 | `general-lite-ollama` | Cheap Ollama mechanical/configuration worker |
 | `review-ollama` | Cost-first Ollama reviewer; not the high-risk review tier |
@@ -114,7 +128,7 @@ Containment also uses `contained-code-local`, `contained-net-research`, and `con
 
 ### `direct`
 
-Use this when you know what you want changed and want the selected model to keep the important implementation and debugging context itself. It may offload mechanical or noisy work, but substantive implementation stays in the primary session.
+Use this when you want to work with one model over time. It can inspect and discuss the repository without mutating it during exploration, then preserve the accumulated context when you decide to implement. It may offload mechanical or noisy work, but substantive implementation, architectural decisions, ambiguous debugging, and final judgment stay in the primary session.
 
 This is the normal choice when context preservation matters.
 
@@ -165,13 +179,13 @@ Keep the durable primary at a balanced reasoning level. Push verbose tests, logs
 ## Design
 
 - Optimize for accepted code quality, not raw inference cost alone.
-- Keep Sol Medium as the normal engineering floor; do not upgrade every primary to High by default.
+- Use Sol High as the normal substantive engineering default and Sol Medium for routing and durable orchestration.
 - Use `luna-runner` for clearly mechanical cheap work.
 - Use Astra Low when extra intelligence is likely to affect the accepted change, and Astra Medium only when concrete risk or complexity warrants it.
-- Reserve Sol High primarily for bounded independent review or diagnosis where a fresh context makes the extra reasoning useful.
+- Keep xHigh and Max manual and exceptional rather than normal agent defaults.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
 - Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits.
-- Delegate sustained application implementation and debugging loops when separation improves context or quality.
+- Preserve useful warm context. Delegate sustained application implementation only when separation improves context isolation, parallelism, quality, specialist boundaries, or operational efficiency.
 - Offload long tests, logs, and broad synthesis so premium engineering context stays focused.
 - Use independent review only when risk or uncertainty justifies a separate reasoning path.
 - Keep trust boundaries explicit. Contained agents separate local code authority from internet research.
