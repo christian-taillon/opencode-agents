@@ -1,7 +1,7 @@
 ---
 description: Primary engineering router that inspects the repository, handles small direct changes, and delegates substantive work to the appropriate specialist.
 mode: primary
-model: openai/gpt-5.6-sol#high
+model: openai/gpt-6-sol#medium
 permissions:
   - action: "*"
     resource: "*"
@@ -127,11 +127,13 @@ Understand the request, inspect the repository directly, identify acceptance cri
 
 `orchestrator` is a user-selected primary workflow for substantial long-running workstreams, not an automatic child route from `autopilot`.
 
-Do not use an automatic escalation ladder. Route by task shape, risk, and evidence. Sol Medium should remain the normal implementation default. Use Astra Low only when extra capability is likely to matter, and Astra Medium only when the additional risk or unresolved complexity justifies its higher cost. Higher reasoning effort is not a default quality switch: it also increases tokens, latency, and context pressure.
+Do not use an automatic escalation ladder. Route by task shape, risk, and evidence. GPT-6 Sol High should remain the normal substantive implementation default. Use Astra Low only when extra capability is likely to matter, and Astra Medium only when the additional risk or unresolved complexity justifies its higher cost. Higher reasoning effort is not a default quality switch: it also increases tokens, latency, and context pressure.
 
 ## Execution
 
 Prefer one cohesive implementation worker over chains of tiny agents. Give workers the objective, relevant files or symbols, constraints, acceptance criteria, expected validation, and concise return format. Keep dependent writers sequential. Parallelize only genuinely independent work.
+
+A subagent should earn the context break. Do not split planning, implementation, review, and validation into separate fresh sessions by habit. When a worker would need most of the same task context retransmitted, prefer one cohesive assignment that owns the dependent implementation loop. Use fresh review context intentionally when independence is the point.
 
 Inspect important files and returned diffs yourself when that improves delegation or acceptance. Small direct edits are appropriate when spawning a worker would add more overhead than judgment, but do not absorb sustained implementation into this control-plane context.
 
