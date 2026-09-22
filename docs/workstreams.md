@@ -24,9 +24,11 @@ The three coding profiles allow only those three utility children. Utility and r
 
 ## OpenCode configuration
 
-Merge [the small V2 settings fragment](../examples/workstreams.json) into the actual global/project config after inspecting precedence. It enables depth two with automatic compaction, a 15,000-token retained tail, a 20,000-token reserve, and bounded tool output. Do not replace a complete config file with this fragment or copy credentials/providers into this repository.
+Merge [the small V2 settings fragment](../examples/workstreams.json) into the actual global/project config after inspecting precedence. It enables depth two with automatic compaction, a 15,000-token retained tail, a 20,000-token reserve, and bounded tool output. The example is a merge fragment, not a complete config file, and deliberately omits `$schema`.
 
-Native V2 uses `experimental.subagent_depth`; the older top-level `subagent_depth` belongs to V1. Follow the installed V2 runtime and [migration reference](https://opencode.ai/v2/docs/migrate-v1), not a mismatched V1 schema. Agent permissions must also allow the child: increasing depth alone does not grant delegation.
+OpenCode V2's current migration guide directs V2 users to `experimental.subagent_depth` and says the older top-level `subagent_depth` is unsupported V1 syntax. The current public `https://opencode.ai/config.json` schema is still compatibility-facing: it advertises the top-level key and does not presently admit the V2 experimental key. Treat that as an upstream transition mismatch, not permission to guess. On the installed `opencode2` version, verify the resolved configuration and an actual depth-two task before unattended adoption. If the installed release changes this surface, follow that release's V2 runtime/docs. Agent permissions must also allow the child: increasing depth alone does not grant delegation.
+
+The other fragment fields are native V2 settings: `compaction.auto`, `compaction.keep.tokens`, `compaction.buffer`, and `tool_output.{max_lines,max_bytes}`.
 
 Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **Sol Medium** explicitly for the manager session; selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Fixed child models remain in their agent files.
 
