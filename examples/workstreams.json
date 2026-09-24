@@ -1,0 +1,16 @@
+{
+  "experimental": {
+    "subagent_depth": 2
+  },
+  "compaction": {
+    "auto": true,
+    "keep": {
+      "tokens": 15000
+    },
+    "buffer": 20000
+  },
+  "tool_output": {
+    "max_lines": 1000,
+    "max_bytes": 32768
+  }
+}
