@@ -10,6 +10,33 @@ Primary agents describe **how work should be performed**. Model choice is separa
 
 Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models and permissions.
 
+## How it works
+
+Choose the workflow based on how you want work performed, then choose the primary model based on task difficulty. Delegated workers use fixed models so routing stays predictable.
+
+```mermaid
+flowchart TD
+    T["Your task"] --> W{"Choose a workflow"}
+
+    W --> D["direct<br/>Keep context together"]
+    W --> A["autopilot<br/>Route bounded work"]
+    W --> AO["autopilot-ollama<br/>Ollama-only routing"]
+    W --> O["orchestrator<br/>Durable multi-phase work"]
+    W --> C["contained<br/>Separate trust boundaries"]
+
+    D --> P["Switchable primary model<br/>Sol High or Astra when justified"]
+
+    A --> R["Routing primary<br/>usually Sol Medium"]
+    R --> F["Fixed-model workers<br/>Luna / Sol / Astra / review / ops"]
+
+    AO --> OR["Fixed Ollama workers<br/>code / mechanical / review / ops"]
+
+    O --> DS["Durable primary state"]
+    DS --> BW["Bounded workers<br/>phases / tests / logs / synthesis"]
+
+    C --> TB["Separated helpers<br/>local code / network research / text only"]
+```
+
 ## Quick start
 
 For most engineering work:
