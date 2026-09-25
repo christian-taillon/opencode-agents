@@ -4,7 +4,7 @@ disabled: true
 
 # Bounded workstreams with native tasks
 
-Use `orchestrator` on GPT-6 Sol Medium to carry an approved plan through implementation, validation, review when warranted, authorized Git actions, and CI. This extends PR #1's model/context-locality decisions; it does not revert coding workers to the earlier Sol Medium default.
+Use `orchestrator` as the durable primary engineering lead for a bounded workstream: architecture and planning discussion, delegated implementation, validation, review when warranted, authorized Git actions, CI, and acceptance. Sol Medium is the normal execution-oriented default; switch the primary session to Sol High when difficult architecture, diagnosis, or consequential tradeoff reasoning belongs in the orchestrator context. This extends PR #1's model/context-locality decisions; it does not revert coding workers to the earlier Sol Medium default.
 
 ## Roles, not an agent tree
 
@@ -20,7 +20,7 @@ orchestrator (Sol Medium)
 
 The three coding profiles allow only those three utility children. Utility and review workers cannot delegate. Review, model escalation, and Git authorization remain with the manager. `github` keeps its existing Ollama GLM configuration; no provider/model ladder is added. Other existing specialist and Ollama workflows remain available without becoming the default workstream path.
 
-`direct` remains a model-switchable primary for human-led exploration and cohesive implementation. It is not made into a child manager. Use `sol-code`, `astra-code`, or `astra-code-medium` when delegation is the goal.
+`direct` remains a model-switchable primary for cohesive engineering that should stay mostly in one model context. `orchestrator` is the durable primary when architecture, planning, delegated execution, and acceptance should continue in one workstream. Neither is a child manager. Use `sol-code`, `astra-code`, or `astra-code-medium` when delegated implementation is the goal.
 
 ## OpenCode configuration
 
@@ -30,7 +30,7 @@ OpenCode V2's current migration guide directs V2 users to `experimental.subagent
 
 The other fragment fields are native V2 settings: `compaction.auto`, `compaction.keep.tokens`, `compaction.buffer`, and `tool_output.{max_lines,max_bytes}`.
 
-Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **Sol Medium** explicitly for the manager session; selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Fixed child models remain in their agent files.
+Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **Sol Medium** explicitly for an execution-oriented manager session; use **Sol High** when the primary itself must carry difficult architecture or diagnosis. Selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Fixed child models remain in their agent files.
 
 ### Existing rcfiles integration
 
@@ -56,9 +56,15 @@ For unattended progress, explicitly grant the Git actions you want and identify 
 
 This is native tool-loop orchestration, not a background daemon. It still needs a running session, available providers, and resolved permissions. A stopped/cancelled/session-limited run resumes from its checkpoint; the agent must not promise execution after the runtime has stopped.
 
+## Decision context and delegation
+
+The orchestrator owns the conversation with the user, architecture and planning decisions, sequencing, acceptance, and model escalation. Delegate work whose result can return compactly without weakening those decisions. Keep work in the primary context when personally understanding it matters to future architecture, cross-cutting tradeoffs, ambiguous diagnosis, or acceptance. Do not maximize agent count for its own sake.
+
+Use bounded tasks for cohesive implementation, broad reconnaissance, repetitive transformations, long tests, logs, and other noisy evidence. Inspect consequential contracts and returned diffs in the primary context. Project-specific rules belong in the repository's `AGENTS.md` and canonical docs rather than being copied into the orchestrator prompt.
+
 ## Tasks as context boundaries
 
-A task owns one cohesive outcome, not one command. The parent receives a compact final handoff and records the actual child session ID returned by the tool. Resume that child for tightly related corrections when useful. Start fresh for a new tranche or a deliberately independent review. Re-review can resume the original reviewer for focused finding closure.
+A task owns one cohesive outcome, not one command. The parent receives a compact final handoff and retains the returned `task_id`, which is the continuation handle for that child session. Resume that same task for tightly related corrections while its context remains useful. Start fresh for a new tranche, stale context, or a deliberately independent review. Re-review can resume the original reviewer for focused finding closure.
 
 Handoffs preserve status, changed scope, decisions, validation, uncertainty, and next action. They omit work diaries and raw output. A normal coding handoff is roughly 200-400 words; a clean review is usually shorter. These are targets, not limits that justify hiding findings. Large logs/manifests belong in task-specific local artifacts.
 
@@ -74,7 +80,7 @@ The manager alone maintains `.opencode/work/current.md` in a locally ignored wor
 Objective / authorized actions / non-goals
 Current tranche and next action
 Checkout / branch / HEAD / relevant dirty-tree identity
-Active child IDs, roles, status, and owned paths
+Active task IDs, roles, status, and owned paths
 Accepted decisions and open findings, with repository pointers
 Validation: command, tested revision/tree, platform, result, log location
 Git/CI: committed/pushed SHA, required checks and pending gates

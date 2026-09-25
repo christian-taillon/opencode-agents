@@ -21,7 +21,7 @@ flowchart TD
     W --> D["direct<br/>Keep context together"]
     W --> A["autopilot<br/>Route bounded work"]
     W --> AO["autopilot-ollama<br/>Ollama-only routing"]
-    W --> O["orchestrator<br/>Durable multi-phase work"]
+    W --> O["orchestrator<br/>Durable engineering lead"]
     W --> C["contained<br/>Separate trust boundaries"]
 
     D --> P["Switchable primary model<br/>Sol High or Astra when justified"]
@@ -57,11 +57,13 @@ For routed engineering that must stay entirely on Ollama:
 autopilot-ollama
 ```
 
-For a large, multi-phase, or long-running objective:
+For a durable workstream where one primary should own planning, delegated execution, and acceptance over time:
 
 ```text
 orchestrator + Sol Medium
 ```
+
+Use Sol High for the orchestrator when difficult architecture, diagnosis, or tradeoff reasoning belongs in that durable primary context.
 
 Choose the workflow first, then change the primary model when the task justifies it.
 
@@ -72,7 +74,7 @@ Choose the workflow first, then change the primary model when the task justifies
 | `direct` | You want one model to own the engineering task and preserve implementation, debugging, and validation context |
 | `autopilot` | You want the primary to inspect the repository, make small direct changes, and route substantive work to workers |
 | `autopilot-ollama` | You want general routed engineering to remain entirely on Ollama-backed models without consuming OpenAI inference credits |
-| `orchestrator` | The objective is large, multi-phase, long-running, or benefits from durable state and context isolation |
+| `orchestrator` | You want one durable engineering lead to own architecture, planning, sequencing, delegated work, and acceptance across a workstream |
 | `contained` | You need separation between local execution and internet research |
 | `gated-direct` | You want direct engineering with approval-gated shell and external-directory access |
 | `tutor` | You want Socratic programming and engineering tutoring |
@@ -82,7 +84,7 @@ The default model in a primary file is only a starting point. A primary workflow
 
 ## Primary model selection
 
-Use **Sol High for normal substantive engineering and long-lived direct sessions**. Use **Sol Medium for routing and durable orchestration** where the primary mainly decomposes, integrates, and accepts work.
+Use **Sol High for normal substantive engineering and long-lived direct sessions**. Use **Sol Medium for routing and execution-oriented orchestration** where the primary mainly decomposes, integrates, and accepts work. Use **Sol High** for an orchestrator whose own context must carry difficult architecture, diagnosis, or consequential tradeoff reasoning.
 
 Do not raise reasoning effort globally as a generic quality switch. Higher effort can buy additional verification and problem solving, but it also increases token use, latency, and context pressure. Spend the extra intelligence in bounded work where the task or risk justifies it.
 
@@ -105,7 +107,8 @@ Normal routed work              autopilot + Sol Medium
 Difficult planning/routing      autopilot + Sol High
 Ollama-only routed work         autopilot-ollama
 
-Long-running work               orchestrator + Sol Medium
+Execution-oriented workstream   orchestrator + Sol Medium
+Architecture-heavy workstream    orchestrator + Sol High
 ```
 
 For mature codebases, optimize for **quality per accepted change**, not inference cost alone. A cheaper model is not a win if it creates unnecessary abstractions, tests, wrappers, cleanup, or follow-up work. Conversely, a higher reasoning level is not a win when it adds substantial tokens and latency without materially changing the accepted result.
@@ -116,7 +119,7 @@ Grok remains outside the normal repository coding ladder. When available, use Gr
 
 Long-lived primary sessions can accumulate valuable conversation history, repository discoveries, debugging evidence, and user decisions. Stable repeated prefixes may also benefit from provider prompt caching. Treat that as an efficiency benefit, not a correctness guarantee, and avoid unnecessary context resets.
 
-A subagent should earn the context break. Delegate when it provides at least one concrete benefit:
+For `autopilot` and `orchestrator`, delegate bounded work when the parent can accept a compact result without losing decision-critical context. Delegation is especially useful when:
 
 - noisy or long-running output can be kept out of the primary context;
 - independent reasoning is intentionally valuable;
@@ -124,9 +127,9 @@ A subagent should earn the context break. Delegate when it provides at least one
 - genuinely independent work can proceed in parallel; or
 - a cohesive bounded worker can own the outcome without needing most of the parent's accumulated reasoning.
 
-Keep work in the current session when it depends materially on prior discussion, sequential implementation decisions, or active debugging evidence. If a child would need most of the current reasoning restated to do the task well, prefer the warm primary context unless independence is itself the objective.
+Keep work in the current session when doing it there materially builds context needed for architecture, sequential implementation decisions, ambiguous debugging, acceptance, or later user discussion. Trivial reads and concise commands also do not need a child when delegation would add more overhead than value.
 
-Do not fragment one cohesive implementation into planner, coder, reviewer, and validator sessions by default. Prefer one capable owner and delegate only the parts that benefit from separation.
+A delegated task is a persistent work context, not a one-shot call. Retain its returned `task_id` and resume it for directly related corrections while that context remains useful. Start fresh for a materially different outcome or intentionally independent reasoning. Do not fragment one cohesive implementation into planner, coder, reviewer, and validator sessions by default.
 
 ## Delegated workers
 
@@ -197,22 +200,22 @@ It has no permission to delegate to OpenAI-backed workers. If the task develops 
 
 ### `orchestrator`
 
-Use this for a substantial workstream rather than an ordinary request. It maintains durable work state, owns dependent phases, and can survive context compaction or eventual supervision by a higher-level agent more cleanly.
+Use this when the primary session itself should be the durable engineering lead. Architecture discussion, planning, diagnosis, sequencing, acceptance, and user decisions stay in this context while bounded implementation and evidence work are delegated.
 
-It may read and edit files directly. The boundary is behavioral, not tool-based: small changes, planning, documentation, configuration, and integration are appropriate; sustained application implementation and debugging loops should usually be delegated.
+It may read and edit files directly. The boundary is behavioral, not tool-based: personally absorb information when understanding it matters to later decisions, and delegate broad inventory, routine implementation, repetitive work, and noisy validation when a compact result is enough. Sustained application implementation and debugging loops should usually stay with one cohesive coding worker.
 
-Keep the durable primary at a balanced reasoning level. Push verbose tests, logs, broad repository inventory, external research, and other context-heavy work into short-lived workers and retain only compact evidence in the long-running context.
+Retain worker `task_id` values until their outcomes are accepted or abandoned. Resume the same worker for directly related corrections; use a fresh task for a new tranche or intentional independent review. Push verbose tests, logs, broad repository inventory, external research, and other context-heavy work into bounded workers and retain compact evidence in the durable primary context.
 
 ## Design
 
 - Optimize for accepted code quality, not raw inference cost alone.
-- Use Sol High as the normal substantive engineering default and Sol Medium for routing and durable orchestration.
+- Use Sol High as the normal substantive engineering default, Sol Medium for routing and execution-oriented orchestration, and Sol High when the durable orchestrator itself owns difficult architecture or diagnosis.
 - Use `luna-runner` for clearly mechanical cheap work.
 - Use Astra Low when extra intelligence is likely to affect the accepted change, and Astra Medium only when concrete risk or complexity warrants it.
 - Keep xHigh and Max manual and exceptional rather than normal agent defaults.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
 - Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits.
-- Preserve useful warm context. Delegate sustained application implementation only when separation improves context isolation, parallelism, quality, specialist boundaries, or operational efficiency.
+- Preserve useful warm context. In `autopilot` and `orchestrator`, delegate bounded execution and evidence by default when a compact result is sufficient; keep decision-critical architecture, tradeoffs, diagnosis, and acceptance in the primary context.
 - Offload long tests, logs, and broad synthesis so premium engineering context stays focused.
 - Use independent review only when risk or uncertainty justifies a separate reasoning path.
 - Keep trust boundaries explicit. Contained agents separate local code authority from internet research.
@@ -222,9 +225,9 @@ Keep the durable primary at a balanced reasoning level. Push verbose tests, logs
 
 ## Nested orchestration
 
-Normal workflows should remain shallow. For long-running autonomous work, `orchestrator` can itself be delegated when OpenCode 2's `experimental.subagent_depth` is configured to permit the hierarchy. `ops-autopilot-ollama` provides the same pattern for a large bounded operational sub-workstream.
+Keep managers top-level. `orchestrator` is a primary workflow, not a normal child agent. The standard depth-two topology is `orchestrator -> coding worker -> utility worker`, with independent review and Git lifecycle owned by the orchestrator. `ops-autopilot-ollama` remains available only for a deliberately large bounded operational sub-workstream.
 
-Extra orchestration layers should buy real context isolation, durable phase ownership, or useful fan-out rather than becoming the default path.
+Extra delegation layers should buy real context isolation or useful fan-out rather than becoming the default path.
 
 ## Permissions
 
