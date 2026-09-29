@@ -1,7 +1,7 @@
 ---
 description: Manual-only high-authority direct implementation agent.
 mode: primary
-model: openai/gpt-6-sol#high
+model: openai/gpt-6.1-sol#high
 permissions:
   - action: "*"
     resource: "*"

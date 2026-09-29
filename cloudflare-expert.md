@@ -1,7 +1,7 @@
 ---
 description: Cloudflare infrastructure specialist for DNS, Workers, Zero Trust, WAF, and related platform changes.
 mode: all
-model: openai/gpt-6-sol#high
+model: openai/gpt-6.1-sol#high
 permissions:
   - action: "*"
     resource: "*"

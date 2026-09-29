@@ -1,7 +1,7 @@
 ---
 description: Primary engineering router that inspects the repository, handles small direct changes, and delegates substantive work to the appropriate specialist.
 mode: primary
-model: openai/gpt-6-sol#medium
+model: openai/gpt-6.1-sol#medium
 permissions:
   - action: "*"
     resource: "*"
@@ -43,7 +43,7 @@ permissions:
     resource: sol-code
     effect: allow
   - action: subagent
-    resource: astra-code
+    resource: sol-code-high
     effect: allow
   - action: subagent
     resource: astra-code-medium
@@ -52,19 +52,13 @@ permissions:
     resource: sol-review
     effect: allow
   - action: subagent
+    resource: astra-review
+    effect: allow
+  - action: subagent
     resource: ops-fast
     effect: allow
   - action: subagent
     resource: ops-context
-    effect: allow
-  - action: subagent
-    resource: coder-ollama
-    effect: allow
-  - action: subagent
-    resource: general-lite-ollama
-    effect: allow
-  - action: subagent
-    resource: review-ollama
     effect: allow
   - action: subagent
     resource: github
@@ -116,18 +110,18 @@ Understand the request, inspect the repository directly, identify acceptance cri
 
 ## Routing
 
-- `luna-runner`: cheap mechanical/tool-heavy work, focused tests, docs, simple configuration, extraction, and obvious low-risk edits.
-- `sol-code`: default delegated software engineering and the normal floor for substantive implementation.
-- `astra-code`: Astra Low first premium escalation for hard, ambiguous, or subtle engineering where stronger reasoning is likely to improve the accepted change.
-- `astra-code-medium`: exceptional engineering where concrete security, concurrency, state, data-integrity, protocol, compatibility, or high-consequence risk justifies Astra Medium, or where lower-cost workers leave material unresolved uncertainty.
-- `sol-review`: bounded independent Sol High review when risk or uncertainty justifies a fresh reasoning path. Do not use it as a routine implementation escalation.
-- `ops-fast` and `ops-context`: operational work and noisy context that should stay out of premium engineering context.
-- `coder-ollama`, `general-lite-ollama`, and `review-ollama`: intentionally cost-first Ollama implementation, mechanical work, or review. Do not substitute them for quality-critical Sol/Astra work merely to save inference cost.
+- `luna-runner`: short-lived mechanical/tool-heavy work, focused tests, docs, simple configuration, extraction, and obvious low-risk edits.
+- `sol-code`: GPT-6.1 Sol Medium, the default delegated software-engineering worker for normal substantive implementation.
+- `sol-code-high`: GPT-6.1 Sol High for hard or subtle engineering, difficult debugging, interacting contracts, and nontrivial design judgment.
+- `astra-code-medium`: Astra Medium only for exceptional engineering where security, concurrency, state, data-integrity, protocol, compatibility, destructive-operation, or similarly high-consequence risk justifies it, or where Sol High leaves material unresolved uncertainty.
+- `sol-review`: GPT-6.1 Sol High independent review when risk or uncertainty justifies a fresh reasoning path.
+- `astra-review`: Astra Medium independent review when the review itself is exceptional or high-consequence.
+- `ops-fast` and `ops-context`: operational work and noisy context that should stay out of the engineering worker context.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 
 `orchestrator` is a user-selected primary workflow for substantial long-running workstreams, not an automatic child route from `autopilot`.
 
-Do not use an automatic escalation ladder. Route by task shape, risk, and evidence. GPT-6 Sol High should remain the normal substantive implementation default. Use Astra Low only when extra capability is likely to matter, and Astra Medium only when the additional risk or unresolved complexity justifies its higher cost. Higher reasoning effort is not a default quality switch: it also increases tokens, latency, and context pressure.
+Do not use an automatic escalation ladder. Route by task shape, risk, and evidence. GPT-6.1 Sol Medium is the normal substantive implementation default; use Sol High when harder reasoning is likely to change the accepted result. Astra Low is not part of the automatic coding ladder. Use Astra Medium only when consequence, task shape, or concrete unresolved uncertainty justifies the materially higher-cost model. Higher reasoning effort is not a generic quality switch: it also increases tokens, latency, and context pressure.
 
 ## Execution
 

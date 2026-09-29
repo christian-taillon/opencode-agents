@@ -24,9 +24,9 @@ flowchart TD
     W --> O["orchestrator<br/>Durable engineering lead"]
     W --> C["contained<br/>Separate trust boundaries"]
 
-    D --> P["Switchable primary model<br/>Sol High or Astra when justified"]
+    D --> P["Switchable primary model<br/>Sol 6.1 High or Astra when justified"]
 
-    A --> R["Routing primary<br/>usually Sol Medium"]
+    A --> R["Routing primary<br/>usually Sol 6.1 Medium"]
     R --> F["Fixed-model workers<br/>Luna / Sol / Astra / review / ops"]
 
     AO --> OR["Fixed Ollama workers<br/>code / mechanical / review / ops"]
@@ -39,16 +39,16 @@ flowchart TD
 
 ## Quick start
 
-For most engineering work:
+For most interactive engineering work:
 
 ```text
-direct + Sol High
+direct + Sol 6.1 High
 ```
 
 For a request where you want OpenCode to decide what should be delegated:
 
 ```text
-autopilot + Sol Medium
+autopilot + Sol 6.1 Medium
 ```
 
 For routed engineering that must stay entirely on Ollama:
@@ -60,10 +60,10 @@ autopilot-ollama
 For a durable workstream where one primary should own planning, delegated execution, and acceptance over time:
 
 ```text
-orchestrator + Sol Medium
+orchestrator + Sol 6.1 Medium
 ```
 
-Use Sol High for the orchestrator when difficult architecture, diagnosis, or tradeoff reasoning belongs in that durable primary context.
+Use Sol 6.1 High for the orchestrator when difficult architecture, diagnosis, or tradeoff reasoning belongs in that durable primary context. Switch the primary itself to Astra Medium only when that parent context contains exceptional or high-consequence judgment that should not be thrown away in a fresh child.
 
 Choose the workflow first, then change the primary model when the task justifies it.
 
@@ -84,31 +84,31 @@ The default model in a primary file is only a starting point. A primary workflow
 
 ## Primary model selection
 
-Use **Sol High for normal substantive engineering and long-lived direct sessions**. Use **Sol Medium for routing and execution-oriented orchestration** where the primary mainly decomposes, integrates, and accepts work. Use **Sol High** for an orchestrator whose own context must carry difficult architecture, diagnosis, or consequential tradeoff reasoning.
+Use **GPT-6.1 Sol High for normal interactive substantive engineering and long-lived direct sessions**. Use **GPT-6.1 Sol Medium for routing, normal delegated implementation, and execution-oriented orchestration**. Use **GPT-6.1 Sol High** when the task is hard or subtle enough that deeper debugging or design judgment is likely to change the accepted result. Use **Astra Medium** for exceptional/high-consequence work, not simply because a task is nontrivial.
 
 Do not raise reasoning effort globally as a generic quality switch. Higher effort can buy additional verification and problem solving, but it also increases token use, latency, and context pressure. Spend the extra intelligence in bounded work where the task or risk justifies it.
 
 | Model | Recommended use |
 | --- | --- |
-| Luna High | Cheap, straightforward, bounded utility work where substantial design judgment is not required |
-| Sol Medium | Routing, orchestration, planning, and control-plane work |
-| Sol High | Default substantive engineering, interactive direct work, difficult diagnosis, and independent review |
-| Astra Low | First premium escalation for hard or subtle engineering where additional capability is likely to matter |
-| Astra Medium | Exceptional security-sensitive, concurrent, stateful, protocol, data-integrity, compatibility, architectural, or high-consequence work |
+| Luna Medium | Cheap, short-lived, bounded utility work where substantial design judgment is not required |
+| GPT-6.1 Sol Medium | Routing, orchestration, normal delegated coding, planning, and control-plane work |
+| GPT-6.1 Sol High | Interactive substantive engineering, hard/subtle implementation, difficult diagnosis, and normal independent review |
+| Astra Medium | Exceptional security-sensitive, concurrent, stateful, protocol, data-integrity, compatibility, destructive-operation, architectural, or high-consequence work and review |
 
 Practical defaults:
 
 ```text
-Normal interactive engineering  direct + Sol High
-Hard coding                     direct + Astra Low
-Very hard/consequential code    direct + Astra Medium
+Normal interactive engineering  direct + Sol 6.1 High
+Hard interactive engineering    direct + Sol 6.1 High
+Exceptional/consequential work  direct + Astra Medium
 
-Normal routed work              autopilot + Sol Medium
-Difficult planning/routing      autopilot + Sol High
+Normal routed work              autopilot + Sol 6.1 Medium
+Difficult planning/routing      autopilot + Sol 6.1 High
 Ollama-only routed work         autopilot-ollama
 
-Execution-oriented workstream   orchestrator + Sol Medium
-Architecture-heavy workstream    orchestrator + Sol High
+Execution-oriented workstream   orchestrator + Sol 6.1 Medium
+Architecture-heavy workstream   orchestrator + Sol 6.1 High
+Exceptional parent judgment     orchestrator + Astra Medium
 ```
 
 For mature codebases, optimize for **quality per accepted change**, not inference cost alone. A cheaper model is not a win if it creates unnecessary abstractions, tests, wrappers, cleanup, or follow-up work. Conversely, a higher reasoning level is not a win when it adds substantial tokens and latency without materially changing the accepted result.
@@ -137,14 +137,15 @@ Subagents keep fixed models so routing remains deterministic.
 
 | Agent | Fixed role |
 | --- | --- |
-| `luna-runner` | GPT-6 Luna High utility worker for commands, tests, docs, simple configuration, and mechanical edits |
-| `sol-code` | GPT-6 Sol High default delegated software-engineering worker |
-| `astra-code` | Astra Low first premium engineering escalation |
+| `luna-runner` | GPT-6 Luna Medium utility worker for commands, tests, docs, simple configuration, and mechanical edits |
+| `sol-code` | GPT-6.1 Sol Medium default delegated software-engineering worker |
+| `sol-code-high` | GPT-6.1 Sol High hard/subtle engineering worker |
 | `astra-code-medium` | Astra Medium exceptional/high-consequence engineering worker |
-| `sol-review` | GPT-6 Sol High independent read-only review |
-| `coder-ollama` | Cost-first Ollama implementation worker for bounded low-risk coding |
-| `general-lite-ollama` | Cheap Ollama mechanical/configuration worker |
-| `review-ollama` | Cost-first Ollama reviewer; not the high-risk review tier |
+| `sol-review` | GPT-6.1 Sol High independent read-only review |
+| `astra-review` | Astra Medium exceptional/high-consequence independent review |
+| `coder-ollama` | Cost-first Ollama implementation worker used by the explicit Ollama workflow |
+| `general-lite-ollama` | Cheap Ollama mechanical/configuration worker used by the explicit Ollama workflow |
+| `review-ollama` | Cost-first Ollama reviewer used by the explicit Ollama workflow |
 | `ops-fast` | Short operational checks and focused commands |
 | `ops-context` | Long tests, logs, repository synthesis, and other noisy context-heavy work |
 | `ops-autopilot-ollama` | Intentionally large operational sub-workstream manager |
@@ -169,16 +170,17 @@ Use this when you want the primary to decide how the work should be performed. I
 Typical routing:
 
 ```text
-mechanical work            -> luna-runner
-normal engineering         -> sol-code
-hard/subtle engineering    -> astra-code
-exceptional/high-risk code -> astra-code-medium
-independent review         -> sol-review
-short operational work     -> ops-fast
-large/noisy context        -> ops-context
+mechanical work             -> luna-runner
+normal engineering          -> sol-code
+hard/subtle engineering     -> sol-code-high
+exceptional/high-risk code  -> astra-code-medium
+independent review          -> sol-review
+high-consequence review     -> astra-review
+short operational work      -> ops-fast
+large/noisy context         -> ops-context
 ```
 
-This is not an automatic escalation ladder. Route directly to the cheapest worker that is likely to produce an acceptable result given the task shape and consequence of being wrong.
+This is not an automatic escalation ladder. Route directly to the cheapest worker that is likely to produce an acceptable result given the task shape and consequence of being wrong. Standard `autopilot` does not route application coding or review to the cost-first Ollama workers; select `autopilot-ollama` when that isolation is the goal.
 
 ### `autopilot-ollama`
 
@@ -209,14 +211,16 @@ Retain worker `task_id` values until their outcomes are accepted or abandoned. R
 ## Design
 
 - Optimize for accepted code quality, not raw inference cost alone.
-- Use Sol High as the normal substantive engineering default, Sol Medium for routing and execution-oriented orchestration, and Sol High when the durable orchestrator itself owns difficult architecture or diagnosis.
-- Use `luna-runner` for clearly mechanical cheap work.
-- Use Astra Low when extra intelligence is likely to affect the accepted change, and Astra Medium only when concrete risk or complexity warrants it.
-- Keep xHigh and Max manual and exceptional rather than normal agent defaults.
+- Use GPT-6.1 Sol Medium for routing, normal delegated implementation, and execution-oriented orchestration.
+- Use GPT-6.1 Sol High for interactive substantive engineering, hard/subtle delegated work, difficult diagnosis, and normal independent review.
+- Use `luna-runner` for clearly mechanical, short-lived work.
+- Use Astra Medium only when concrete consequence, risk, or unresolved complexity warrants it; Astra Low is not part of the automatic coding ladder.
+- Keep Astra High, xHigh, and Max manual and exceptional rather than normal agent defaults.
+- Keep cost-first Ollama coding/review behind the explicit `autopilot-ollama` workflow; do not mix it into normal OpenAI routing.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
 - Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits.
 - Preserve useful warm context. In `autopilot` and `orchestrator`, delegate bounded execution and evidence by default when a compact result is sufficient; keep decision-critical architecture, tradeoffs, diagnosis, and acceptance in the primary context.
-- Offload long tests, logs, and broad synthesis so premium engineering context stays focused.
+- Offload long tests, logs, and broad synthesis so engineering context stays focused.
 - Use independent review only when risk or uncertainty justifies a separate reasoning path.
 - Keep trust boundaries explicit. Contained agents separate local code authority from internet research.
 - Keep project-specific workflow policy in the repository's canonical guidance.

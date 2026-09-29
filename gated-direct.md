@@ -1,7 +1,7 @@
 ---
 description: Human-gated direct software-engineering agent with normal project file access and approval-gated shell and external-directory operations. Select it directly for interactive work, or delegate a bounded implementation or investigation when a human approval checkpoint before host command execution or access outside the project is wanted.
 mode: all
-model: openai/gpt-6-sol#high
+model: openai/gpt-6.1-sol#high
 permissions:
   - action: "*"
     resource: "*"

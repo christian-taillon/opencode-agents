@@ -4,23 +4,28 @@ disabled: true
 
 # Bounded workstreams with native tasks
 
-Use `orchestrator` as the durable primary engineering lead for a bounded workstream: architecture and planning discussion, delegated implementation, validation, review when warranted, authorized Git actions, CI, and acceptance. Sol Medium is the normal execution-oriented default; switch the primary session to Sol High when difficult architecture, diagnosis, or consequential tradeoff reasoning belongs in the orchestrator context. This extends PR #1's model/context-locality decisions; it does not revert coding workers to the earlier Sol Medium default.
+Use `orchestrator` as the durable primary engineering lead for a bounded workstream: architecture and planning discussion, delegated implementation, validation, review when warranted, authorized Git actions, CI, and acceptance. GPT-6.1 Sol Medium is the normal execution-oriented default; switch the primary session to GPT-6.1 Sol High when difficult architecture, diagnosis, or consequential tradeoff reasoning belongs in the orchestrator context. Switch the primary itself to Astra Medium only when exceptional or high-consequence judgment belongs in that durable parent context.
 
 ## Roles, not an agent tree
 
 ```text
-orchestrator (Sol Medium)
-  +-- sol-code (Sol High), or a bounded Astra escalation
+orchestrator (Sol 6.1 Medium)
+  +-- sol-code (Sol 6.1 Medium): normal cohesive implementation
   |     +-- ops-context: long tests, logs, evidence synthesis
   |     +-- ops-fast: short checks
   |     +-- luna-runner: an already-decided mechanical change
-  +-- sol-review (Sol High): independent sibling
+  +-- sol-code-high (Sol 6.1 High): hard/subtle implementation
+  |     +-- same three utility children
+  +-- astra-code-medium (Astra Medium): exceptional/high-consequence implementation
+  |     +-- same three utility children
+  +-- sol-review (Sol 6.1 High): normal independent sibling
+  +-- astra-review (Astra Medium): exceptional/high-consequence independent sibling
   +-- github: authorized Git/CI lifecycle
 ```
 
-The three coding profiles allow only those three utility children. Utility and review workers cannot delegate. Review, model escalation, and Git authorization remain with the manager. `github` keeps its existing Ollama GLM configuration; no provider/model ladder is added. Other existing specialist and Ollama workflows remain available without becoming the default workstream path.
+The three coding profiles allow only the three utility children. Utility and review workers cannot delegate. Review, model escalation, and Git authorization remain with the manager. `github` is a bounded lifecycle specialist rather than part of the coding model ladder. Cost-first Ollama coding/review remains behind the explicit `autopilot-ollama` workflow; `ops-autopilot-ollama` is still available only for a deliberately large bounded operational sub-workstream.
 
-`direct` remains a model-switchable primary for cohesive engineering that should stay mostly in one model context. `orchestrator` is the durable primary when architecture, planning, delegated execution, and acceptance should continue in one workstream. Neither is a child manager. Use `sol-code`, `astra-code`, or `astra-code-medium` when delegated implementation is the goal.
+`direct` remains a model-switchable primary for cohesive engineering that should stay mostly in one model context. `orchestrator` is the durable primary when architecture, planning, delegated execution, and acceptance should continue in one workstream. Neither is a child manager. Use `sol-code`, `sol-code-high`, or `astra-code-medium` when delegated implementation is the goal.
 
 ## OpenCode configuration
 
@@ -30,11 +35,11 @@ OpenCode V2's current migration guide directs V2 users to `experimental.subagent
 
 The other fragment fields are native V2 settings: `compaction.auto`, `compaction.keep.tokens`, `compaction.buffer`, and `tool_output.{max_lines,max_bytes}`.
 
-Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **Sol Medium** explicitly for an execution-oriented manager session; use **Sol High** when the primary itself must carry difficult architecture or diagnosis. Selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Fixed child models remain in their agent files.
+Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **GPT-6.1 Sol Medium** explicitly for an execution-oriented manager session; use **GPT-6.1 Sol High** when the primary itself must carry difficult architecture or diagnosis, and Astra Medium only when exceptional/high-consequence judgment belongs in the parent context. Selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Fixed child models remain in their agent files.
 
 ### Existing rcfiles integration
 
-For a setup managed through rcfiles, reuse the existing `/program` command rather than adding a second launcher. In `.config/opencode/commands/program.md`, verify `agent: orchestrator`, `model: openai/gpt-6-sol#medium`, and `$ARGUMENTS` forwarding. Update stale command-level model overrides when installing these agent definitions.
+For a setup managed through rcfiles, reuse the existing `/program` command rather than adding a second launcher. In `.config/opencode/commands/program.md`, verify `agent: orchestrator`, `model: openai/gpt-6.1-sol#medium`, and `$ARGUMENTS` forwarding. Update stale command-level model overrides when installing these agent definitions.
 
 Do not assume checked-in dotfiles are the host's resolved configuration. Inspect global, project, command, and session model selections before deployment. Preserve unrelated providers, MCP, security settings, and context limits. Use explicit `/program` selection rather than changing every project's default. This agent collection does not migrate rcfiles or install anything on a running host.
 
@@ -94,9 +99,9 @@ A worker's `READY FOR REVIEW` is not independent approval. Review applies to the
 
 After installing, use a disposable checkout and no commit/push authority to verify:
 
-1. `orchestrator` launches `sol-code`; it can launch `ops-fast` or `ops-context` at depth two.
+1. `orchestrator` launches `sol-code`, `sol-code-high`, or `astra-code-medium`; each coding worker can launch `ops-fast` or `ops-context` at depth two.
 2. The coding worker cannot delegate a reviewer, another coder, a manager, or `github`; a utility cannot delegate further.
-3. The manager commissions `sol-review` as a fresh sibling and can resume the same implementation child for a correction.
+3. The manager commissions `sol-review` or `astra-review` as a fresh sibling and can resume the same implementation child for a correction.
 4. The parent receives compact handoffs with complete-log pointers, and waits for child completion rather than treating launch as success.
 5. A fresh or compacted manager reconciles `.opencode/work/current.md` against a dirty checkout without losing work or repeating already-authorized mutations.
 

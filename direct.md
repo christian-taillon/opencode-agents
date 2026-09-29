@@ -1,7 +1,7 @@
 ---
 description: Direct engineering primary that preserves implementation and engineering judgment in one session while delegating noisy validation and evidence collection.
 mode: primary
-model: openai/gpt-6-sol#high
+model: openai/gpt-6.1-sol#high
 permissions:
   - action: "*"
     resource: "*"
