@@ -1,7 +1,7 @@
 ---
 description: Git and GitHub lifecycle specialist for commits, branches, pull requests, releases, and CI.
 mode: all
-model: ollama-cloud/glm-5.3#high
+model: openai/gpt-6-luna#high
 permissions:
   - action: "*"
     resource: "*"

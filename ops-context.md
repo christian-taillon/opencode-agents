@@ -1,7 +1,7 @@
 ---
 description: No-edit analysis worker for long tests, logs, repository synthesis, research, and other noisy context-heavy work.
 mode: subagent
-model: ollama-cloud/glm-5.3-flash#high
+model: openai/gpt-6-sol#medium
 steps: 48
 permissions:
   - action: "*"
