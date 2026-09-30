@@ -1,7 +1,7 @@
 ---
 description: OpenCode 2 configuration and documentation specialist.
 mode: all
-model: ollama-cloud/glm-5.3
+model: openai/gpt-6.1-sol#medium
 permissions:
   - action: "*"
     resource: "*"

@@ -1,7 +1,7 @@
 ---
 description: Cloudflare infrastructure specialist for DNS, Workers, Zero Trust, WAF, and related platform changes.
 mode: all
-model: ollama-cloud/glm-5.3#high
+model: openai/gpt-6.1-sol#high
 permissions:
   - action: "*"
     resource: "*"
