@@ -55,15 +55,6 @@ permissions:
     resource: "astra-review"
     effect: allow
   - action: "subagent"
-    resource: "ops-fast"
-    effect: allow
-  - action: "subagent"
-    resource: "ops-context"
-    effect: allow
-  - action: "subagent"
-    resource: "ops-autopilot-ollama"
-    effect: allow
-  - action: "subagent"
     resource: "github"
     effect: allow
   - action: "subagent"
@@ -134,8 +125,7 @@ If two correction attempts repeat the same blocker without new evidence, stop th
 - `astra-code-medium`: Astra Medium for exceptional security, privacy, state, identity, durability, concurrency, data-integrity, protocol, compatibility, destructive-operation, or other high-consequence work. Honor an explicit user model requirement. Escalate from concrete risk/evidence, not size alone.
 - `sol-review`: GPT-6.1 Sol High independent review with a concrete acceptance question.
 - `astra-review`: Astra Medium independent review for exceptional or high-consequence changes.
-- `ops-context`: noisy validation, logs, broad inventory; `ops-fast`: short evidence collection; `luna-runner`: explicit mechanical work.
-- `github`: authorized repository lifecycle and SHA-specific CI. `ops-autopilot-ollama` remains available only as a deliberate large operational sub-workstream. Ollama coding/review workers belong to the explicit `autopilot-ollama` workflow rather than this normal engineering path.
+- `luna-runner`: explicit mechanical work. Use `github` for authorized repository lifecycle and SHA-specific CI. Ollama coding/review workers belong to the explicit `autopilot-ollama` workflow rather than this normal engineering path.
 
 Use native subagent tasks as context boundaries. The normal depth-two topology is manager -> coding worker -> utility. Coding workers may use only `ops-context`, `ops-fast`, and `luna-runner` as children. Review, escalation, Git authority, and acceptance stay here. Do not nest managers by default. Task contexts do not isolate the filesystem: keep dependent writers sequential, pause writes during validation/review, and use explicitly separate worktrees for independent parallel changes.
 

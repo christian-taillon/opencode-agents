@@ -55,12 +55,6 @@ permissions:
     resource: astra-review
     effect: allow
   - action: subagent
-    resource: ops-fast
-    effect: allow
-  - action: subagent
-    resource: ops-context
-    effect: allow
-  - action: subagent
     resource: github
     effect: allow
   - action: subagent
@@ -116,7 +110,6 @@ Understand the request, inspect the repository directly, identify acceptance cri
 - `astra-code-medium`: Astra Medium only for exceptional engineering where security, concurrency, state, data-integrity, protocol, compatibility, destructive-operation, or similarly high-consequence risk justifies it, or where Sol High leaves material unresolved uncertainty.
 - `sol-review`: GPT-6.1 Sol High independent review when risk or uncertainty justifies a fresh reasoning path.
 - `astra-review`: Astra Medium independent review when the review itself is exceptional or high-consequence.
-- `ops-fast` and `ops-context`: operational work and noisy context that should stay out of the engineering worker context.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 
 `orchestrator` is a user-selected primary workflow for substantial long-running workstreams, not an automatic child route from `autopilot`.

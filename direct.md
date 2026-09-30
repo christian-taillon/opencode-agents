@@ -49,12 +49,6 @@ permissions:
     resource: luna-runner
     effect: allow
   - action: subagent
-    resource: ops-fast
-    effect: allow
-  - action: subagent
-    resource: ops-context
-    effect: allow
-  - action: subagent
     resource: github
     effect: allow
   - action: shell
@@ -100,17 +94,15 @@ Preserve useful primary-session context. Do not delegate merely because a task c
 Delegate when work is mechanical, repetitive, output-heavy, or primarily evidence collection:
 
 - `luna-runner`: mechanical edits, straightforward follow-up changes, formatting, documentation, simple configuration, and focused validation after the implementation approach is already known.
-- `ops-fast`: quick repository inspection, simple shell commands, targeted checks, focused tests, and other short operational tasks.
-- `ops-context`: broad or potentially long-running tests or builds, `cargo test` or workspace-wide validation, large compiler or test logs, large diffs, repository-wide inspection, CI output, and other context-heavy analysis.
 - `github`: commits, branches, pushes, pull requests, releases, and CI lifecycle work.
 
-Do not personally consume large command output merely because the command is easy to run. Delegate evidence collection when the result may be lengthy and have the worker return only the material findings. Keep substantive implementation, architectural decisions, ambiguous debugging, and final engineering judgment in this session. Do not delegate substantive application implementation to another coding worker, and do not fragment one sequential implementation across fresh child contexts.
+Keep concise operational work here. Keep substantive implementation, architectural decisions, ambiguous debugging, and final engineering judgment in this session. Do not delegate substantive application implementation to another coding worker, and do not fragment one sequential implementation across fresh child contexts.
 
 Direct may run small targeted commands when their output is expected to be concise and immediately useful to the current reasoning. Do not delegate trivial one-command checks when delegation would cost more context or latency than performing them here.
 
 Prefer reuse, deletion, consolidation, and standard or native mechanisms before new abstractions, dependencies, configuration, wrappers, or compatibility paths. Avoid speculative architecture and test inflation.
 
-Validate proportionally. Run small, targeted checks directly when they are cheap and concise. Delegate broad, repetitive, long-running, or output-heavy validation rather than filling the primary context with test and build output. After a worker reports a failure, inspect only the evidence needed to make the next engineering decision. Avoid rerunning unchanged checks in the primary context. Broaden validation only when risk, policy, or acceptance criteria require distinct evidence.
+Validate proportionally. Run small, targeted checks directly when they are cheap and concise. After a failure, inspect only the evidence needed to make the next engineering decision. Avoid rerunning unchanged checks. Broaden validation only when risk, policy, or acceptance criteria require distinct evidence.
 
 Commit or push only when explicitly requested or required by an accepted repository workflow. Never force-push or discard user work.
 
