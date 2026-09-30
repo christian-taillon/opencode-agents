@@ -63,6 +63,10 @@ This is native tool-loop orchestration, not a background daemon. It still needs 
 
 The orchestrator owns the conversation with the user, architecture and planning decisions, sequencing, acceptance, and model escalation. Delegate work whose result can return compactly without weakening those decisions. Keep work in the primary context when personally understanding it matters to future architecture, cross-cutting tradeoffs, ambiguous diagnosis, or acceptance. Do not maximize agent count for its own sake.
 
+
+The repository's automatic model allowlist applies only when the manager is choosing a model on its own. If the user explicitly names a different model or variant for `code`, `review`, `utility`, or another child role, the manager may pass that exact model override when it is available in the current OpenCode project. Use `/models` to confirm the provider/model identifier rather than guessing it. Preserve the worker role and permissions when changing only the model.
+
+
 Use bounded tasks for cohesive implementation, broad reconnaissance, repetitive transformations, long tests, logs, and other noisy evidence. Inspect consequential contracts and returned diffs in the primary context. Project-specific rules belong in the repository's `AGENTS.md` and canonical docs rather than being copied into the orchestrator prompt.
 
 ## Tasks as context boundaries

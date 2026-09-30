@@ -142,6 +142,39 @@ The automatic child-model allowlist is Luna Medium, Luna High, Sol Medium, Sol H
 
 Containment also uses `contained-code-local`, `contained-net-research`, and `contained-text-only` as trust-boundary helpers. Those helpers inherit the selected `contained` model unless explicitly overridden.
 
+
+## Explicit worker model overrides
+
+The worker role and the model are separate choices. `code` still means implementation and `review` still means read-only review even when you explicitly run that role with a different provider or model.
+
+OpenCode only accepts models that are available in the current project. Use `/models` to select or confirm the exact provider/model ID instead of guessing it.
+
+Examples of user instructions:
+
+```text
+Use the review agent with Grok 4.7 High to review the current changes.
+
+Delegate this implementation to the code agent using GLM-5.3.
+
+For this task, use GLM-5.3-Flash for utility and short operational work.
+
+Run the normal review again, but use <provider>/<grok-4.7-model>#high instead of the default Sol model.
+```
+
+For a longer workstream you can set a temporary routing preference in the request:
+
+```text
+For this workstream:
+- use GLM-5.3 for code tasks
+- use GLM-5.3-Flash for utility or short operational tasks
+- use Grok 4.7 High for the independent review
+
+Keep the existing agent roles and permissions.
+```
+
+Replace the example model names with the exact IDs shown by `/models` in your environment. A model explicitly requested by the user may be used even when it is outside this repository's automatic routing allowlist. The allowlist limits autonomous model selection; it does not prevent an explicit user-selected child-model override.
+
+
 ## How the main workflows differ
 
 ### `direct`
