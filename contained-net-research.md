@@ -1,7 +1,6 @@
 ---
 description: Contained internet-only research worker with no repository, edit, or shell access.
 mode: subagent
-model: ollama-cloud/glm-5.3
 permissions:
   - action: "*"
     resource: "*"

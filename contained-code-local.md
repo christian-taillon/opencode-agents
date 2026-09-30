@@ -1,7 +1,6 @@
 ---
 description: Contained local code worker with repository access, approval-gated shell execution, and no internet.
 mode: subagent
-model: ollama-cloud/glm-5.3
 permissions:
   - action: "*"
     resource: "*"

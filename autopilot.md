@@ -37,22 +37,13 @@ permissions:
     resource: "*"
     effect: allow
   - action: subagent
-    resource: luna-runner
+    resource: utility
     effect: allow
   - action: subagent
-    resource: sol-code
+    resource: code
     effect: allow
   - action: subagent
-    resource: sol-code-high
-    effect: allow
-  - action: subagent
-    resource: astra-code-medium
-    effect: allow
-  - action: subagent
-    resource: sol-review
-    effect: allow
-  - action: subagent
-    resource: astra-review
+    resource: review
     effect: allow
   - action: subagent
     resource: github
@@ -104,15 +95,14 @@ Understand the request, inspect the repository directly, identify acceptance cri
 
 ## Routing
 
-- `luna-runner`: short-lived mechanical/tool-heavy work, focused tests, docs, simple configuration, extraction, and obvious low-risk edits.
-- `sol-code`: GPT-6.1 Sol Medium, the default delegated software-engineering worker for normal substantive implementation.
-- `sol-code-high`: GPT-6.1 Sol High for hard or subtle engineering, difficult debugging, interacting contracts, and nontrivial design judgment.
-- `astra-code-medium`: Astra Medium only for exceptional engineering where security, concurrency, state, data-integrity, protocol, compatibility, destructive-operation, or similarly high-consequence risk justifies it, or where Sol High leaves material unresolved uncertainty.
-- `sol-review`: GPT-6.1 Sol High independent review when risk or uncertainty justifies a fresh reasoning path.
-- `astra-review`: Astra Medium independent review when the review itself is exceptional or high-consequence.
+- `utility`: short-lived mechanical/tool-heavy work, focused tests, docs, simple configuration, extraction, and obvious low-risk edits. Default: Luna Medium.
+- `code`: cohesive implementation and debugging. Default: Sol Medium. Override to Sol High for hard/subtle work and to Astra Medium only for exceptional/high-consequence engineering.
+- `review`: independent read-only review. Default: Sol High. Override to Astra Medium only when the review itself is exceptional or high-consequence.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 
 `orchestrator` is a user-selected primary workflow for substantial long-running workstreams, not an automatic child route from `autopilot`.
+
+Automatic child-model policy: this profile is authorized to select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Do not automatically select another provider, model, or variant. Grok remains a manual `direct` choice. When an existing `code` or `review` child needs a stronger approved model, resume that same child with the model override rather than discarding useful context.
 
 Do not use an automatic escalation ladder. Route by task shape, risk, and evidence. GPT-6.1 Sol Medium is the normal substantive implementation default; use Sol High when harder reasoning is likely to change the accepted result. Astra Low is not part of the automatic coding ladder. Use Astra Medium only when consequence, task shape, or concrete unresolved uncertainty justifies the materially higher-cost model. Higher reasoning effort is not a generic quality switch: it also increases tokens, latency, and context pressure.
 

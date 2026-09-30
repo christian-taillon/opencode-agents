@@ -10,22 +10,20 @@ Use `orchestrator` as the durable primary engineering lead for a bounded workstr
 
 ```text
 orchestrator (Sol 6.1 Medium)
-  +-- sol-code (Sol 6.1 Medium): normal cohesive implementation
+  +-- code (Sol 6.1 Medium default)
+  |     +-- Sol High override: hard/subtle implementation
+  |     +-- Astra Medium override: exceptional/high-consequence implementation
   |     +-- ops-context: long tests, logs, evidence synthesis
   |     +-- ops-fast: short checks
-  |     +-- luna-runner: an already-decided mechanical change
-  +-- sol-code-high (Sol 6.1 High): hard/subtle implementation
-  |     +-- same three utility children
-  +-- astra-code-medium (Astra Medium): exceptional/high-consequence implementation
-  |     +-- same three utility children
-  +-- sol-review (Sol 6.1 High): normal independent sibling
-  +-- astra-review (Astra Medium): exceptional/high-consequence independent sibling
+  |     +-- utility: an already-decided mechanical change
+  +-- review (Sol 6.1 High default)
+  |     +-- Astra Medium override: exceptional/high-consequence review
   +-- github: authorized Git/CI lifecycle
 ```
 
-The three coding profiles allow only the three utility children. Utility and review workers cannot delegate. Review, model escalation, and Git authorization remain with the manager. `github` is a bounded lifecycle specialist rather than part of the coding model ladder.
+`code` may delegate only to `ops-context`, `ops-fast`, and `utility`. Utility and review workers cannot delegate. Model selection, independent review, and Git authorization remain with the manager. `github` is a bounded lifecycle specialist rather than part of the coding model ladder.
 
-`direct` remains a model-switchable primary for cohesive engineering that should stay mostly in one model context. `orchestrator` is the durable primary when architecture, planning, delegated execution, and acceptance should continue in one workstream. Neither is a child manager. Use `sol-code`, `sol-code-high`, or `astra-code-medium` when delegated implementation is the goal.
+`direct` remains a model-switchable primary for cohesive engineering that should stay mostly in one model context. `orchestrator` is the durable primary when architecture, planning, delegated execution, and acceptance should continue in one workstream. Neither is a child manager. Use `code` for delegated implementation and select an approved model override only when task shape or consequence justifies it.
 
 ## OpenCode configuration
 
@@ -35,7 +33,7 @@ OpenCode V2's current migration guide directs V2 users to `experimental.subagent
 
 The other fragment fields are native V2 settings: `compaction.auto`, `compaction.keep.tokens`, `compaction.buffer`, and `tool_output.{max_lines,max_bytes}`.
 
-Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **GPT-6.1 Sol Medium** explicitly for an execution-oriented manager session; use **GPT-6.1 Sol High** when the primary itself must carry difficult architecture or diagnosis, and Astra Medium only when exceptional/high-consequence judgment belongs in the parent context. Selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Fixed child models remain in their agent files.
+Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **GPT-6.1 Sol Medium** explicitly for an execution-oriented manager session; use **GPT-6.1 Sol High** when the primary itself must carry difficult architecture or diagnosis, and Astra Medium only when exceptional/high-consequence judgment belongs in the parent context. Selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Worker agents define role defaults; `autopilot` and `orchestrator` may override child models only within the approved Luna Medium/Luna High/Sol Medium/Sol High/Astra Medium set.
 
 ### Existing rcfiles integration
 
@@ -99,9 +97,9 @@ A worker's `READY FOR REVIEW` is not independent approval. Review applies to the
 
 After installing, use a disposable checkout and no commit/push authority to verify:
 
-1. `orchestrator` launches `sol-code`, `sol-code-high`, or `astra-code-medium`; each coding worker can launch `ops-fast` or `ops-context` at depth two.
-2. The coding worker cannot delegate a reviewer, another coder, a manager, or `github`; a utility cannot delegate further.
-3. The manager commissions `sol-review` or `astra-review` as a fresh sibling and can resume the same implementation child for a correction.
+1. `orchestrator` launches `code` with its Sol Medium default and can resume the same child with approved Sol High or Astra Medium overrides; `code` can launch `ops-fast`, `ops-context`, or `utility` at depth two.
+2. `code` cannot delegate a reviewer, another coder, a manager, or `github`; utility and review workers cannot delegate further.
+3. The manager commissions `review` as a fresh sibling with Sol High by default and may use the approved Astra Medium override for exceptional/high-consequence review.
 4. The parent receives compact handoffs with complete-log pointers, and waits for child completion rather than treating launch as success.
 5. A fresh or compacted manager reconciles `.opencode/work/current.md` against a dirty checkout without losing work or repeating already-authorized mutations.
 

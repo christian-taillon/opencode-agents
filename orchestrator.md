@@ -37,22 +37,13 @@ permissions:
     resource: "*"
     effect: allow
   - action: "subagent"
-    resource: "luna-runner"
+    resource: "utility"
     effect: allow
   - action: "subagent"
-    resource: "sol-code"
+    resource: "code"
     effect: allow
   - action: "subagent"
-    resource: "sol-code-high"
-    effect: allow
-  - action: "subagent"
-    resource: "astra-code-medium"
-    effect: allow
-  - action: "subagent"
-    resource: "sol-review"
-    effect: allow
-  - action: "subagent"
-    resource: "astra-review"
+    resource: "review"
     effect: allow
   - action: "subagent"
     resource: "github"
@@ -120,14 +111,13 @@ If two correction attempts repeat the same blocker without new evidence, stop th
 
 ## Routing and depth
 
-- `sol-code`: GPT-6.1 Sol Medium for normal cohesive implementation.
-- `sol-code-high`: GPT-6.1 Sol High for hard/subtle engineering, difficult debugging, interacting contracts, or nontrivial design judgment.
-- `astra-code-medium`: Astra Medium for exceptional security, privacy, state, identity, durability, concurrency, data-integrity, protocol, compatibility, destructive-operation, or other high-consequence work. Honor an explicit user model requirement. Escalate from concrete risk/evidence, not size alone.
-- `sol-review`: GPT-6.1 Sol High independent review with a concrete acceptance question.
-- `astra-review`: Astra Medium independent review for exceptional or high-consequence changes.
-- `luna-runner`: explicit mechanical work. Use `github` for authorized repository lifecycle and SHA-specific CI.
+- `code`: cohesive implementation and debugging. Default: Sol Medium. Override to Sol High for hard/subtle work and to Astra Medium only for exceptional/high-consequence engineering.
+- `review`: independent read-only review. Default: Sol High. Override to Astra Medium only for exceptional/high-consequence review.
+- `utility`: explicit mechanical work. Default: Luna Medium. Use `github` for authorized repository lifecycle and SHA-specific CI.
 
-Use native subagent tasks as context boundaries. The normal depth-two topology is manager -> coding worker -> utility. Coding workers may use only `ops-context`, `ops-fast`, and `luna-runner` as children. Review, escalation, Git authority, and acceptance stay here. Do not nest managers by default. Task contexts do not isolate the filesystem: keep dependent writers sequential, pause writes during validation/review, and use explicitly separate worktrees for independent parallel changes.
+Automatic child-model policy: this profile is authorized to select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Do not automatically select another provider, model, or variant. Grok remains a manual `direct` choice. When an existing `code` or `review` child needs a stronger approved model, resume that same child with the model override rather than discarding useful context.
+
+Use native subagent tasks as context boundaries. The normal depth-two topology is manager -> coding worker -> utility. Coding workers may use only `ops-context`, `ops-fast`, and `utility` as children. Review, escalation, Git authority, and acceptance stay here. Do not nest managers by default. Task contexts do not isolate the filesystem: keep dependent writers sequential, pause writes during validation/review, and use explicitly separate worktrees for independent parallel changes.
 
 ## Recovery and context
 

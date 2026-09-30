@@ -1,7 +1,6 @@
 ---
 description: Contained no-tool reasoning worker for sanitized text-only tasks.
 mode: subagent
-model: ollama-cloud/glm-5.3
 permissions:
   - action: "*"
     resource: "*"

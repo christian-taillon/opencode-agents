@@ -46,7 +46,7 @@ permissions:
     resource: "*"
     effect: allow
   - action: subagent
-    resource: luna-runner
+    resource: utility
     effect: allow
   - action: subagent
     resource: github
@@ -93,7 +93,7 @@ Preserve useful primary-session context. Do not delegate merely because a task c
 
 Delegate when work is mechanical, repetitive, output-heavy, or primarily evidence collection:
 
-- `luna-runner`: mechanical edits, straightforward follow-up changes, formatting, documentation, simple configuration, and focused validation after the implementation approach is already known.
+- `utility`: mechanical edits, straightforward follow-up changes, formatting, documentation, simple configuration, and focused validation after the implementation approach is already known.
 - `github`: commits, branches, pushes, pull requests, releases, and CI lifecycle work.
 
 Keep concise operational work here. Keep substantive implementation, architectural decisions, ambiguous debugging, and final engineering judgment in this session. Do not delegate substantive application implementation to another coding worker, and do not fragment one sequential implementation across fresh child contexts.

@@ -6,13 +6,13 @@ disabled: true
 
 Reusable, opinionated agent definitions for OpenCode 2.
 
-Primary agents describe **how work should be performed**. Model choice is separate because OpenCode lets you switch the active model for a primary session. Model-specific names are used mainly for subagents whose model must be fixed when delegated.
+Primary agents describe **how work should be performed**. Worker agents describe **what role a delegated task performs**. Model choice is separate: primaries can be switched interactively, and approved child-model overrides let `autopilot` and `orchestrator` use the same worker role at different capability levels.
 
 Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models and permissions.
 
 ## How it works
 
-Choose the workflow based on how you want work performed, then choose the primary model based on task difficulty. Delegated workers use fixed models so routing stays predictable.
+Choose the workflow based on how you want work performed, then choose the primary model based on task difficulty. Delegated roles have sensible default models; `autopilot` and `orchestrator` may override the child model only within the approved routing set.
 
 ```mermaid
 flowchart TD
@@ -26,7 +26,7 @@ flowchart TD
     D --> P["Switchable primary model<br/>Sol 6.1 High or Astra when justified"]
 
     A --> R["Routing primary<br/>usually Sol 6.1 Medium"]
-    R --> F["Fixed-model workers<br/>Luna / Sol / Astra / review / ops"]
+    R --> F["Role-based workers<br/>code / review / utility / ops"]
 
 
     O --> DS["Durable primary state"]
@@ -125,23 +125,22 @@ A delegated task is a persistent work context, not a one-shot call. Retain its r
 
 ## Delegated workers
 
-Subagents keep fixed models so routing remains deterministic.
+Worker names describe role and permissions, not the model tier. Defaults keep common routing simple, while approved child-model overrides let the same role scale up without duplicating agent definitions.
 
-| Agent | Fixed role |
-| --- | --- |
-| `luna-runner` | GPT-6 Luna Medium utility worker for commands, tests, docs, simple configuration, and mechanical edits |
-| `sol-code` | GPT-6.1 Sol Medium default delegated software-engineering worker |
-| `sol-code-high` | GPT-6.1 Sol High hard/subtle engineering worker |
-| `astra-code-medium` | Astra Medium exceptional/high-consequence engineering worker |
-| `sol-review` | GPT-6.1 Sol High independent read-only review |
-| `astra-review` | Astra Medium exceptional/high-consequence independent review |
-| `ops-fast` | Short operational checks and focused commands |
-| `ops-context` | Long tests, logs, repository synthesis, and other noisy context-heavy work |
-| `github` | Git and GitHub lifecycle specialist |
-| `config` | OpenCode 2 configuration specialist |
-| `cloudflare-expert` | Cloudflare infrastructure specialist |
+| Agent | Default model | Role |
+| --- | --- | --- |
+| `utility` | GPT-6 Luna Medium | Mechanical edits, docs, simple configuration, extraction, and focused validation |
+| `code` | GPT-6.1 Sol Medium | Cohesive software engineering and debugging; may be overridden to Sol High or Astra Medium |
+| `review` | GPT-6.1 Sol High | Independent read-only review; may be overridden to Astra Medium |
+| `ops-fast` | GPT-6 Luna High | Short operational checks and focused commands |
+| `ops-context` | GPT-6.1 Sol Medium | Long tests, logs, repository synthesis, and noisy context-heavy work |
+| `github` | GPT-6.1 Sol Medium | Git and GitHub lifecycle specialist |
+| `config` | GPT-6.1 Sol Medium | OpenCode 2 configuration specialist |
+| `cloudflare-expert` | GPT-6.1 Sol High | Cloudflare infrastructure specialist |
 
-Containment also uses `contained-code-local`, `contained-net-research`, and `contained-text-only` as trust-boundary helpers.
+The automatic child-model allowlist is Luna Medium, Luna High, Sol Medium, Sol High, and Astra Medium. Do not automatically select another provider, model, or variant. Grok 4.7 High remains a manual `direct` choice.
+
+Containment also uses `contained-code-local`, `contained-net-research`, and `contained-text-only` as trust-boundary helpers. Those helpers inherit the selected `contained` model unless explicitly overridden.
 
 ## How the main workflows differ
 
@@ -153,17 +152,17 @@ This is the normal choice when context preservation matters.
 
 ### `autopilot`
 
-Use this when you want the primary to decide how the work should be performed. It can inspect the repository, understand files directly, update plans or documentation, make small obvious edits, and delegate substantive implementation to fixed-model workers.
+Use this when you want the primary to decide how the work should be performed. It can inspect the repository, understand files directly, update plans or documentation, make small obvious edits, and delegate substantive work to role-based workers.
 
 Typical routing:
 
 ```text
-mechanical work             -> luna-runner
-normal engineering          -> sol-code
-hard/subtle engineering     -> sol-code-high
-exceptional/high-risk code  -> astra-code-medium
-independent review          -> sol-review
-high-consequence review     -> astra-review
+mechanical work             -> utility (Luna Medium)
+normal engineering          -> code (Sol Medium)
+hard/subtle engineering     -> code + Sol High override
+exceptional/high-risk code  -> code + Astra Medium override
+independent review          -> review (Sol High)
+high-consequence review     -> review + Astra Medium override
 short operational work      -> ops-fast
 large/noisy context         -> ops-context
 ```
@@ -182,9 +181,9 @@ Retain worker `task_id` values until their outcomes are accepted or abandoned. R
 ## Design
 
 - Optimize for accepted code quality, not raw inference cost alone.
-- Use GPT-6.1 Sol Medium for routing, normal delegated implementation, and execution-oriented orchestration.
-- Use GPT-6.1 Sol High for interactive substantive engineering, hard/subtle delegated work, difficult diagnosis, and normal independent review.
-- Use `luna-runner` for clearly mechanical, short-lived work.
+- Use GPT-6.1 Sol Medium for routing, the default `code` worker, and execution-oriented orchestration.
+- Use GPT-6.1 Sol High for interactive substantive engineering, hard/subtle `code` overrides, difficult diagnosis, and the default `review` worker.
+- Use `utility` for clearly mechanical, short-lived work.
 - Use Astra Medium only when concrete consequence, risk, or unresolved complexity warrants it; Astra Low is not part of the automatic coding ladder.
 - Keep Astra High, xHigh, and Max manual and exceptional rather than normal agent defaults.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
@@ -199,7 +198,7 @@ Retain worker `task_id` values until their outcomes are accepted or abandoned. R
 
 ## Nested orchestration
 
-Keep managers top-level. `orchestrator` is a primary workflow, not a normal child agent. The standard depth-two topology is `orchestrator -> coding worker -> utility worker`, with independent review and Git lifecycle owned by the orchestrator.
+Keep managers top-level. `orchestrator` is a primary workflow, not a normal child agent. The standard depth-two topology is `orchestrator -> code -> utility/ops`, with independent `review` and Git lifecycle owned by the orchestrator.
 
 Extra delegation layers should buy real context isolation or useful fan-out rather than becoming the default path.
 

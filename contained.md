@@ -1,7 +1,7 @@
 ---
 description: Contained orchestrator that separates local code authority from internet research.
 mode: primary
-model: ollama-cloud/glm-5.3
+model: openai/gpt-6.1-sol#medium
 permissions:
   - action: "*"
     resource: "*"
