@@ -20,7 +20,6 @@ flowchart TD
 
     W --> D["direct<br/>Keep context together"]
     W --> A["autopilot<br/>Route bounded work"]
-    W --> AO["autopilot-ollama<br/>Ollama-only routing"]
     W --> O["orchestrator<br/>Durable engineering lead"]
     W --> C["contained<br/>Separate trust boundaries"]
 
@@ -29,7 +28,6 @@ flowchart TD
     A --> R["Routing primary<br/>usually Sol 6.1 Medium"]
     R --> F["Fixed-model workers<br/>Luna / Sol / Astra / review / ops"]
 
-    AO --> OR["Fixed Ollama workers<br/>code / mechanical / review / ops"]
 
     O --> DS["Durable primary state"]
     DS --> BW["Bounded workers<br/>phases / tests / logs / synthesis"]
@@ -51,12 +49,6 @@ For a request where you want OpenCode to decide what should be delegated:
 autopilot + Sol 6.1 Medium
 ```
 
-For routed engineering that must stay entirely on Ollama:
-
-```text
-autopilot-ollama
-```
-
 For a durable workstream where one primary should own planning, delegated execution, and acceptance over time:
 
 ```text
@@ -73,7 +65,6 @@ Choose the workflow first, then change the primary model when the task justifies
 | --- | --- |
 | `direct` | You want one model to own the engineering task and preserve implementation, debugging, and validation context |
 | `autopilot` | You want the primary to inspect the repository, make small direct changes, and route substantive work to workers |
-| `autopilot-ollama` | You want general routed engineering to remain entirely on Ollama-backed models without consuming OpenAI inference credits |
 | `orchestrator` | You want one durable engineering lead to own architecture, planning, sequencing, delegated work, and acceptance across a workstream |
 | `contained` | You need separation between local execution and internet research |
 | `gated-direct` | You want direct engineering with approval-gated shell and external-directory access |
@@ -106,7 +97,6 @@ Independent second approach     direct + Grok 4.7 High
 
 Normal routed work              autopilot + Sol 6.1 Medium
 Difficult planning/routing      autopilot + Sol 6.1 High
-Ollama-only routed work         autopilot-ollama
 
 Execution-oriented workstream   orchestrator + Sol 6.1 Medium
 Architecture-heavy workstream   orchestrator + Sol 6.1 High
@@ -145,12 +135,8 @@ Subagents keep fixed models so routing remains deterministic.
 | `astra-code-medium` | Astra Medium exceptional/high-consequence engineering worker |
 | `sol-review` | GPT-6.1 Sol High independent read-only review |
 | `astra-review` | Astra Medium exceptional/high-consequence independent review |
-| `coder-ollama` | Cost-first Ollama implementation worker used by the explicit Ollama workflow |
-| `general-lite-ollama` | Cheap Ollama mechanical/configuration worker used by the explicit Ollama workflow |
-| `review-ollama` | Cost-first Ollama reviewer used by the explicit Ollama workflow |
 | `ops-fast` | Short operational checks and focused commands |
 | `ops-context` | Long tests, logs, repository synthesis, and other noisy context-heavy work |
-| `ops-autopilot-ollama` | Intentionally large operational sub-workstream manager |
 | `github` | Git and GitHub lifecycle specialist |
 | `config` | OpenCode 2 configuration specialist |
 | `cloudflare-expert` | Cloudflare infrastructure specialist |
@@ -182,25 +168,8 @@ short operational work      -> ops-fast
 large/noisy context         -> ops-context
 ```
 
-This is not an automatic escalation ladder. Route directly to the cheapest worker that is likely to produce an acceptable result given the task shape and consequence of being wrong. Standard `autopilot` does not route application coding or review to the cost-first Ollama workers; select `autopilot-ollama` when that isolation is the goal.
+This is not an automatic escalation ladder. Route directly to the cheapest worker that is likely to produce an acceptable result given the task shape and consequence of being wrong.
 
-### `autopilot-ollama`
-
-Use this when you want the same general routing pattern but intentionally want the entire model path to remain on Ollama-backed agents.
-
-Typical routing:
-
-```text
-bounded implementation      -> coder-ollama
-mechanical/config work      -> general-lite-ollama
-independent cheap review    -> review-ollama
-short operational work     -> ops-fast
-large/noisy context        -> ops-context
-large operational work     -> ops-autopilot-ollama
-OpenCode configuration     -> config
-```
-
-It has no permission to delegate to OpenAI-backed workers. If the task develops security-sensitive behavior, subtle concurrency/state, consequential architecture, difficult protocol or compatibility constraints, data-integrity risk, or material unresolved uncertainty, it should stop and report the escalation need rather than silently consuming premium credits.
 
 ### `orchestrator`
 
@@ -218,7 +187,6 @@ Retain worker `task_id` values until their outcomes are accepted or abandoned. R
 - Use `luna-runner` for clearly mechanical, short-lived work.
 - Use Astra Medium only when concrete consequence, risk, or unresolved complexity warrants it; Astra Low is not part of the automatic coding ladder.
 - Keep Astra High, xHigh, and Max manual and exceptional rather than normal agent defaults.
-- Keep cost-first Ollama coding/review behind the explicit `autopilot-ollama` workflow; do not mix it into normal OpenAI routing.
 - Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
 - Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits.
 - Preserve useful warm context. In `autopilot` and `orchestrator`, delegate bounded execution and evidence by default when a compact result is sufficient; keep decision-critical architecture, tradeoffs, diagnosis, and acceptance in the primary context.
@@ -231,7 +199,7 @@ Retain worker `task_id` values until their outcomes are accepted or abandoned. R
 
 ## Nested orchestration
 
-Keep managers top-level. `orchestrator` is a primary workflow, not a normal child agent. The standard depth-two topology is `orchestrator -> coding worker -> utility worker`, with independent review and Git lifecycle owned by the orchestrator. `ops-autopilot-ollama` remains available only for a deliberately large bounded operational sub-workstream.
+Keep managers top-level. `orchestrator` is a primary workflow, not a normal child agent. The standard depth-two topology is `orchestrator -> coding worker -> utility worker`, with independent review and Git lifecycle owned by the orchestrator.
 
 Extra delegation layers should buy real context isolation or useful fan-out rather than becoming the default path.
 

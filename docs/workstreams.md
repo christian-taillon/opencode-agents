@@ -23,7 +23,7 @@ orchestrator (Sol 6.1 Medium)
   +-- github: authorized Git/CI lifecycle
 ```
 
-The three coding profiles allow only the three utility children. Utility and review workers cannot delegate. Review, model escalation, and Git authorization remain with the manager. `github` is a bounded lifecycle specialist rather than part of the coding model ladder. Cost-first Ollama coding/review remains behind the explicit `autopilot-ollama` workflow; `ops-autopilot-ollama` is still available only for a deliberately large bounded operational sub-workstream.
+The three coding profiles allow only the three utility children. Utility and review workers cannot delegate. Review, model escalation, and Git authorization remain with the manager. `github` is a bounded lifecycle specialist rather than part of the coding model ladder.
 
 `direct` remains a model-switchable primary for cohesive engineering that should stay mostly in one model context. `orchestrator` is the durable primary when architecture, planning, delegated execution, and acceptance should continue in one workstream. Neither is a child manager. Use `sol-code`, `sol-code-high`, or `astra-code-medium` when delegated implementation is the goal.
 
