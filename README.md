@@ -94,6 +94,7 @@ Do not raise reasoning effort globally as a generic quality switch. Higher effor
 | GPT-6.1 Sol Medium | Routing, orchestration, normal delegated coding, planning, and control-plane work |
 | GPT-6.1 Sol High | Interactive substantive engineering, hard/subtle implementation, difficult diagnosis, and normal independent review |
 | Astra Medium | Exceptional security-sensitive, concurrent, stateful, protocol, data-integrity, compatibility, destructive-operation, architectural, or high-consequence work and review |
+| Grok 4.7 High | Manual `direct` alternative when an independent perspective, different implementation approach, or fresh debugging frame is valuable |
 
 Practical defaults:
 
@@ -101,6 +102,7 @@ Practical defaults:
 Normal interactive engineering  direct + Sol 6.1 High
 Hard interactive engineering    direct + Sol 6.1 High
 Exceptional/consequential work  direct + Astra Medium
+Independent second approach     direct + Grok 4.7 High
 
 Normal routed work              autopilot + Sol 6.1 Medium
 Difficult planning/routing      autopilot + Sol 6.1 High
@@ -113,7 +115,7 @@ Exceptional parent judgment     orchestrator + Astra Medium
 
 For mature codebases, optimize for **quality per accepted change**, not inference cost alone. A cheaper model is not a win if it creates unnecessary abstractions, tests, wrappers, cleanup, or follow-up work. Conversely, a higher reasoning level is not a win when it adds substantial tokens and latency without materially changing the accepted result.
 
-Grok remains outside the normal repository coding ladder. When available, use Grok 4.7 High manually with `direct` for a fresh independent perspective, especially when the current model may be stuck on one framing. Do not add it to automatic routing merely because credits are available.
+Grok remains outside the normal repository coding ladder. Use Grok 4.7 High manually with `direct` when a fresh independent perspective, different implementation strategy, or alternate debugging frame is useful, especially when Sol appears anchored on one approach. Do not add Grok to automatic routing, the normal delegated coding ladder, or the default orchestrator path. Prefer High for routine Grok use; keep xHigh manual for unusually difficult bounded problems where the extra reasoning cost is explicitly justified.
 
 ## Context locality and delegation
 
