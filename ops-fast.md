@@ -1,7 +1,7 @@
 ---
 description: Bounded operations worker for quick repository inspection, commands, focused tests, and small lookups.
 mode: subagent
-model: openai/gpt-6-luna#high
+model: ollama-cloud/glm-5.3-flash#low
 steps: 16
 permissions:
   - action: "*"
