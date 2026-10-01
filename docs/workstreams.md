@@ -2,50 +2,77 @@
 disabled: true
 ---
 
-# Bounded workstreams with native tasks
+# Bounded workstreams with Autopilot execution
 
-Use `orchestrator` as the durable primary engineering lead for a bounded workstream: architecture and planning discussion, delegated implementation, validation, review when warranted, authorized Git actions, CI, and acceptance. GPT-6.1 Sol Medium is the normal execution-oriented default; switch the primary session to GPT-6.1 Sol High when difficult architecture, diagnosis, or consequential tradeoff reasoning belongs in the orchestrator context. Switch the primary itself to Astra Medium only when exceptional or high-consequence judgment belongs in that durable parent context.
+`orchestrator` is the durable development manager. It owns architecture and planning context, sequencing, recovery, acceptance, and the user conversation. `autopilot` is the engineering control plane and can run either directly as a primary agent or as a bounded child.
 
-## Roles, not an agent tree
+## Topology
 
 ```text
-orchestrator (Sol 6.1 Medium)
-  +-- code (Sol 6.1 Medium default)
-  |     +-- Sol High override: hard/subtle implementation
-  |     +-- Astra Medium override: exceptional/high-consequence implementation
-  |     +-- ops-context: long tests, logs, evidence synthesis
-  |     +-- ops-fast: short checks
-  |     +-- utility: an already-decided mechanical change
-  +-- review (Sol 6.1 High default)
-  |     +-- Astra Medium override: exceptional/high-consequence review
-  +-- github: authorized Git/CI lifecycle
+orchestrator (primary)
+  +-- autopilot (foreground bounded tranche)
+  |     +-- code
+  |     |     +-- ops-context / ops-fast / utility
+  |     +-- review / utility / ops when useful
+  +-- review (independent acceptance review when warranted)
+  +-- github / config / other specialists
 ```
 
-`code` may delegate only to `ops-context`, `ops-fast`, and `utility`. Utility and review workers cannot delegate. Model selection, independent review, and Git authorization remain with the manager. `github` is a bounded lifecycle specialist rather than part of the coding model ladder.
+`orchestrator` does not normally route implementation directly to `code`. It defines the next tranche and its acceptance contract, then lets Autopilot choose the engineering workers needed to complete that tranche.
 
-`direct` remains a model-switchable primary for cohesive engineering that should stay mostly in one model context. `orchestrator` is the durable primary when architecture, planning, delegated execution, and acceptance should continue in one workstream. Neither is a child manager. Use `code` for delegated implementation and select an approved model override only when task shape or consequence justifies it.
+## OpenCode V2 configuration
 
-## OpenCode configuration
+The longest normal path is three child levels, so merge this fragment into the resolved V2 configuration:
 
-Merge [the small V2 settings fragment](../examples/workstreams.json) into the actual global/project config after inspecting precedence. It enables depth two with automatic compaction, a 15,000-token retained tail, a 20,000-token reserve, and bounded tool output. The example is a merge fragment, not a complete config file, and deliberately omits `$schema`.
+```json
+{
+  "experimental": {
+    "subagent_depth": 3
+  },
+  "compaction": {
+    "auto": true,
+    "keep": { "tokens": 15000 },
+    "buffer": 20000
+  },
+  "tool_output": {
+    "max_lines": 1000,
+    "max_bytes": 32768
+  }
+}
+```
 
-OpenCode V2's current migration guide directs V2 users to `experimental.subagent_depth` and says the older top-level `subagent_depth` is unsupported V1 syntax. The current public `https://opencode.ai/config.json` schema is still compatibility-facing: it advertises the top-level key and does not presently admit the V2 experimental key. Treat that as an upstream transition mismatch, not permission to guess. On the installed `opencode2` version, verify the resolved configuration and an actual depth-two task before unattended adoption. If the installed release changes this surface, follow that release's V2 runtime/docs. Agent permissions must also allow the child: increasing depth alone does not grant delegation.
+V2's migration guide currently requires `experimental.subagent_depth`; the older top-level `subagent_depth` is unsupported V1 syntax. Agent permissions still control which child IDs each layer can actually launch.
 
-The other fragment fields are native V2 settings: `compaction.auto`, `compaction.keep.tokens`, `compaction.buffer`, and `tool_output.{max_lines,max_bytes}`.
+`autopilot` uses `mode: all`, which V2 documents as usable either as the primary agent or as a subagent.
 
-Install the selected root agent Markdown files in `~/.config/opencode/agents/` or the project's `.opencode/agents/`. Do not install this guide or the example as an agent. Select `orchestrator` and **GPT-6.1 Sol Medium** explicitly for an execution-oriented manager session; use **GPT-6.1 Sol High** when the primary itself must carry difficult architecture or diagnosis, and Astra Medium only when exceptional/high-consequence judgment belongs in the parent context. Selecting a primary agent does not necessarily replace a session's already-selected model. Check the resolved model before starting. Worker agents define role defaults; `autopilot` and `orchestrator` may override child models only within the approved Luna Medium/Luna High/Sol Medium/Sol High/Astra Medium set.
+## Foreground contract
 
-### Existing rcfiles integration
+OpenCode V2 foreground subagent calls wait for the child result; `background: true` returns immediately and later injects a completion result. The durable workstream does not place a required dependency on that callback path.
 
-For a setup managed through rcfiles, reuse the existing `/program` command rather than adding a second launcher. In `.config/opencode/commands/program.md`, verify `agent: orchestrator`, `model: openai/gpt-6.1-sol#medium`, and `$ARGUMENTS` forwarding. Update stale command-level model overrides when installing these agent definitions.
+For `/program` work:
 
-Do not assume checked-in dotfiles are the host's resolved configuration. Inspect global, project, command, and session model selections before deployment. Preserve unrelated providers, MCP, security settings, and context limits. Use explicit `/program` selection rather than changing every project's default. This agent collection does not migrate rcfiles or install anything on a running host.
+1. Orchestrator selects one bounded tranche.
+2. Orchestrator launches Autopilot in the foreground.
+3. Autopilot completes every required child, command, test, build, and validation before returning.
+4. Orchestrator inspects the returned diff and evidence, then continues to correction, review, lifecycle work, or the next tranche.
 
-The fragment deliberately adds no provider overrides, warming, model-limit inflation, native-provider compaction policy, custom compaction tool, plugin, or service. Automatic compaction remains a fallback, not the main context-management strategy.
+Required work must not return as `still running`, `waiting for notification`, or equivalent. Long commands should normally use a sufficient foreground timeout rather than background execution merely because they are slow.
+
+Direct primary Autopilot use may still use background execution for genuinely independent, non-overlapping work. This restriction is about the critical dependency chain, not a global ban on useful concurrency.
+
+## New child versus continuation
+
+A child session owns one cohesive outcome. Keep the returned `sessionID`.
+
+- Resume that `sessionID` after the prior call has returned when correcting or extending the same bounded outcome and its context is still useful.
+- Start a fresh child for a new tranche, stale context, or deliberately independent review.
+- Do not send another prompt into a child while its prior call is still running.
+
+This preserves useful context without depending on concurrent prompts into one child session.
 
 ## Start with an authority contract
 
-A useful `/program` request is:
+A useful `/program` request remains explicit about scope and lifecycle authority:
 
 ```text
 Complete the next accepted tranche of Issue <id> in <repository>.
@@ -55,63 +82,38 @@ Authority: edit and validate; stop before commit, push, merge, or release.
 Budget: <optional cost/time/escalation limit>.
 ```
 
-For unattended progress, explicitly grant the Git actions you want and identify the branch/PR boundary. A worker completing a task is not a reason for the manager to stop and ask you to transport the result. A new external contract, destructive operation, exhausted budget, or missing authorization is a reason to stop.
+For unattended progress, explicitly authorize the Git actions you want. A worker completing a tranche is not a reason for the manager to stop and ask the user to transport the result.
 
-This is native tool-loop orchestration, not a background daemon. It still needs a running session, available providers, and resolved permissions. A stopped/cancelled/session-limited run resumes from its checkpoint; the agent must not promise execution after the runtime has stopped.
+## Recovery
 
-## Decision context and delegation
-
-The orchestrator owns the conversation with the user, architecture and planning decisions, sequencing, acceptance, and model escalation. Delegate work whose result can return compactly without weakening those decisions. Keep work in the primary context when personally understanding it matters to future architecture, cross-cutting tradeoffs, ambiguous diagnosis, or acceptance. Do not maximize agent count for its own sake.
-
-
-The repository's automatic model allowlist applies only when the manager is choosing a model on its own. If the user explicitly names a different model or variant for `code`, `review`, `utility`, or another child role, the manager may pass that exact model override when it is available in the current OpenCode project. Use `/models` to confirm the provider/model identifier rather than guessing it. Preserve the worker role and permissions when changing only the model.
-
-
-Use bounded tasks for cohesive implementation, broad reconnaissance, repetitive transformations, long tests, logs, and other noisy evidence. Inspect consequential contracts and returned diffs in the primary context. Project-specific rules belong in the repository's `AGENTS.md` and canonical docs rather than being copied into the orchestrator prompt.
-
-## Tasks as context boundaries
-
-A task owns one cohesive outcome, not one command. The parent receives a compact final handoff and retains the returned `task_id`, which is the continuation handle for that child session. Resume that same task for tightly related corrections while its context remains useful. Start fresh for a new tranche, stale context, or a deliberately independent review. Re-review can resume the original reviewer for focused finding closure.
-
-Handoffs preserve status, changed scope, decisions, validation, uncertainty, and next action. They omit work diaries and raw output. A normal coding handoff is roughly 200-400 words; a clean review is usually shorter. These are targets, not limits that justify hiding findings. Large logs/manifests belong in task-specific local artifacts.
-
-A final handoff **does not compact or erase the child history**. Repeatedly resuming a child can still grow its context. Retire completed children rather than carrying them across unrelated tranches. Do not churn useful context merely to reduce a token number, and do not preserve obsolete context merely because the model has room or cached input may be cheaper.
-
-Native task sessions isolate conversation, not files or credentials. Use one active writer per shared checkout, pause edits during validation/review, and wait for utility children before reporting completion. Read-only profiles can still run repository tests with filesystem effects; shell rules are guardrails, not sandboxing.
-
-## Recovery and acceptance evidence
-
-The manager alone maintains `.opencode/work/current.md` in a locally ignored work directory. A sufficient checkpoint is:
+`orchestrator` alone maintains `.opencode/work/current.md` in a locally ignored work directory. Keep it short:
 
 ```text
-Objective / authorized actions / non-goals
+Objective / authority / non-goals
 Current tranche and next action
-Checkout / branch / HEAD / relevant dirty-tree identity
-Active task IDs, roles, status, and owned paths
-Accepted decisions and open findings, with repository pointers
-Validation: command, tested revision/tree, platform, result, log location
-Git/CI: committed/pushed SHA, required checks and pending gates
+Checkout / branch / HEAD / dirty-tree identity
+Active child sessionIDs, roles, and status
+Accepted decisions and open findings
+Validation: command, tested tree/environment, result, log pointer
+Git/CI lifecycle state
 ```
 
-Do not copy ROADMAP or OpenSpec into a second planning system. Native todos are a convenience for current steps, not authoritative recovery state. After compaction or resumption, verify the actual checkout and any running jobs before acting on the checkpoint. Store short task artifacts under the work directory or a task-specific temporary directory without committing sensitive logs.
+After compaction or resumption, reconcile this checkpoint against the actual checkout and any active jobs before acting. Native todos are convenient current-step tracking, not a second roadmap.
 
-A worker's `READY FOR REVIEW` is not independent approval. Review applies to the inspected tree, and tests apply to their tested tree/environment. Reuse unchanged evidence rather than rerunning a full suite for every comment edit; rerun affected checks when relevant bytes, dependencies, toolchain, or acceptance conditions change. Missing package or native-platform validation remains a missing gate.
+## Adoption checks
 
-## Bounded validation before adoption
+Before relying on this unattended:
 
-After installing, use a disposable checkout and no commit/push authority to verify:
-
-1. `orchestrator` launches `code` with its Sol Medium default and can resume the same child with approved Sol High or Astra Medium overrides; `code` can launch `ops-fast`, `ops-context`, or `utility` at depth two.
-2. `code` cannot delegate a reviewer, another coder, a manager, or `github`; utility and review workers cannot delegate further.
-3. The manager commissions `review` as a fresh sibling with Sol High by default and may use the approved Astra Medium override for exceptional/high-consequence review.
-4. The parent receives compact handoffs with complete-log pointers, and waits for child completion rather than treating launch as success.
-5. A fresh or compacted manager reconciles `.opencode/work/current.md` against a dirty checkout without losing work or repeating already-authorized mutations.
-
-Agent files and instructions alone cannot prove runtime permission/continuation behavior. Check the resolved configuration on the actual installed version before relying on unattended operation.
+1. Verify the resolved config actually applies `experimental.subagent_depth: 3`.
+2. Verify `autopilot` is available both as a primary and as a child.
+3. Verify `orchestrator -> autopilot -> code -> utility/ops` works with the configured permissions.
+4. Verify required tranche work remains foreground and returns terminal evidence.
+5. Verify a completed Autopilot child can be resumed by `sessionID` for a focused correction.
+6. Verify a fresh tranche creates a fresh Autopilot child.
 
 ## References
 
-- [Agents and model/permission inheritance](https://opencode.ai/v2/docs/agents)
-- [Native subagent tasks and continuation](https://opencode.ai/v2/docs/tools)
-- [V2 depth and configuration migration](https://opencode.ai/v2/docs/migrate-v1)
-- [Compaction semantics and limits](https://opencode.ai/v2/docs/compaction)
+- https://opencode.ai/v2/docs/agents
+- https://opencode.ai/v2/docs/tools
+- https://opencode.ai/v2/docs/migrate-v1
+- https://github.com/anomalyco/opencode/issues/45480

@@ -6,7 +6,7 @@ disabled: true
 
 Reusable, opinionated agent definitions for OpenCode 2.
 
-Primary agents describe **how work should be performed**. Worker agents describe **what role a delegated task performs**. Model choice is separate: primaries can be switched interactively, and approved child-model overrides let `autopilot` and `orchestrator` use the same worker role at different capability levels.
+Top-level workflows describe **how work should be performed**. Worker agents describe **what role a delegated task performs**. `autopilot` is intentionally `mode: all`: use it directly as a primary control plane or let `orchestrator` call it as a bounded foreground child. Model choice remains separate from role.
 
 Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models and permissions.
 
@@ -22,14 +22,14 @@ Your task
 |   `-- default: Sol 6.1 High
 |
 +-- autopilot
-|   +-- route bounded work
-|   +-- default: Sol 6.1 Medium
-|   `-- workers: code / review / utility / ops
+|   +-- engineering control plane
+|   +-- primary or bounded child
+|   `-- code / review / utility / ops
 |
 +-- orchestrator
-|   +-- durable engineering lead
+|   +-- durable development manager
 |   +-- default: Sol 6.1 Medium
-|   `-- planning / workers / review / acceptance
+|   `-- foreground Autopilot tranches / review / acceptance
 |
 `-- contained
     +-- separate trust boundaries
@@ -50,10 +50,11 @@ For a request where you want OpenCode to decide what should be delegated:
 autopilot + Sol 6.1 Medium
 ```
 
-For a durable workstream where one primary should own planning, delegated execution, and acceptance over time:
+For a durable workstream where the parent should sequence bounded engineering tranches through acceptance:
 
 ```text
 orchestrator + Sol 6.1 Medium
+  -> autopilot foreground tranches
 ```
 
 Use Sol 6.1 High for the orchestrator when difficult architecture, diagnosis, or tradeoff reasoning belongs in that durable primary context. Switch the primary itself to Astra Medium only when that parent context contains exceptional or high-consequence judgment that should not be thrown away in a fresh child.
@@ -65,8 +66,8 @@ Choose the workflow first, then change the primary model when the task justifies
 | Agent | Use it when |
 | --- | --- |
 | `direct` | You want one model to own the engineering task and preserve implementation, debugging, and validation context |
-| `autopilot` | You want the primary to inspect the repository, make small direct changes, and route substantive work to workers |
-| `orchestrator` | You want one durable engineering lead to own architecture, planning, sequencing, delegated work, and acceptance across a workstream |
+| `autopilot` | You want the engineering control plane directly, or a bounded execution control plane beneath Orchestrator |
+| `orchestrator` | You want a durable development manager to own architecture, sequencing, recovery, and acceptance while Autopilot executes bounded tranches |
 | `contained` | You need separation between local execution and internet research |
 | `gated-direct` | You want direct engineering with approval-gated shell and external-directory access |
 | `tutor` | You want Socratic programming and engineering tutoring |
@@ -122,7 +123,7 @@ For `autopilot` and `orchestrator`, delegate bounded work when the parent can ac
 
 Keep work in the current session when doing it there materially builds context needed for architecture, sequential implementation decisions, ambiguous debugging, acceptance, or later user discussion. Trivial reads and concise commands also do not need a child when delegation would add more overhead than value.
 
-A delegated task is a persistent work context, not a one-shot call. Retain its returned `task_id` and resume it for directly related corrections while that context remains useful. Start fresh for a materially different outcome or intentionally independent reasoning. Do not fragment one cohesive implementation into planner, coder, reviewer, and validator sessions by default.
+A delegated subagent is a persistent child context, not a one-shot call. Retain its returned `sessionID` and resume it for directly related corrections after the prior call has returned. Start fresh for a materially different outcome or intentionally independent reasoning. Do not send a second prompt into a child that is still running.
 
 ## Delegated workers
 
@@ -186,7 +187,7 @@ This is the normal choice when context preservation matters.
 
 ### `autopilot`
 
-Use this when you want the primary to decide how the work should be performed. It can inspect the repository, understand files directly, update plans or documentation, make small obvious edits, and delegate substantive work to role-based workers.
+Use this when you want the engineering control plane to decide how the work should be performed. It is `mode: all`, so it can run directly as the primary or as a bounded child of `orchestrator`. It inspects the repository, makes small direct changes, and delegates substantive work to role-based workers.
 
 Typical routing:
 
@@ -206,11 +207,11 @@ This is not an automatic escalation ladder. Route directly to the cheapest worke
 
 ### `orchestrator`
 
-Use this when the primary session itself should be the durable engineering lead. Architecture discussion, planning, diagnosis, sequencing, acceptance, and user decisions stay in this context while bounded implementation and evidence work are delegated.
+Use this when the parent session should be the durable development manager. Architecture discussion, planning, sequencing, recovery, acceptance, and user decisions stay in this context. Normal engineering execution is delegated as one bounded **foreground** tranche at a time to `autopilot`.
 
-It may read and edit files directly. The boundary is behavioral, not tool-based: personally absorb information when understanding it matters to later decisions, and delegate broad inventory, routine implementation, repetitive work, and noisy validation when a compact result is enough. Sustained application implementation and debugging loops should usually stay with one cohesive coding worker.
+The parent inspects returned diffs and evidence, then either resumes the completed Autopilot `sessionID` for a correction to the same tranche or starts a fresh Autopilot session for a new tranche. It does not send more work into a still-running child and does not accept "waiting for a notification" as a completed handoff.
 
-Retain worker `task_id` values until their outcomes are accepted or abandoned. Resume the same worker for directly related corrections; use a fresh task for a new tranche or intentional independent review. Push verbose tests, logs, broad repository inventory, external research, and other context-heavy work into bounded workers and retain compact evidence in the durable primary context.
+Independent review, Git lifecycle, configuration, and other specialist boundaries can still be invoked directly when appropriate. The critical execution chain stays synchronous so acceptance does not depend on background callback delivery.
 
 ## Design
 
@@ -232,9 +233,15 @@ Retain worker `task_id` values until their outcomes are accepted or abandoned. R
 
 ## Nested orchestration
 
-Keep managers top-level. `orchestrator` is a primary workflow, not a normal child agent. The standard depth-two topology is `orchestrator -> code -> utility/ops`, with independent `review` and Git lifecycle owned by the orchestrator.
+The deliberate long-workstream topology is:
 
-Extra delegation layers should buy real context isolation or useful fan-out rather than becoming the default path.
+```text
+orchestrator -> autopilot -> code -> utility/ops
+```
+
+That path requires `experimental.subagent_depth: 3`. Direct Autopilot use remains shallower. Permissions still bound which agents each layer may launch, and extra layers should exist only when they buy a clear context or responsibility boundary.
+
+Critical work in this chain is foreground. Background execution remains available to direct Autopilot for genuinely independent work, but it is not used for dependencies that gate a tranche handoff or Orchestrator acceptance.
 
 ## Permissions
 
