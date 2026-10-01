@@ -14,25 +14,26 @@ Copy the agents you want into `~/.config/opencode/agents/` or a project's `.open
 
 Choose the workflow based on how you want work performed, then choose the primary model based on task difficulty. Delegated roles have sensible default models; `autopilot` and `orchestrator` may override the child model only within the approved routing set.
 
-```mermaid
-flowchart TD
-    T["Your task"] --> W{"Choose a workflow"}
-
-    W --> D["direct<br/>Keep context together"]
-    W --> A["autopilot<br/>Route bounded work"]
-    W --> O["orchestrator<br/>Durable engineering lead"]
-    W --> C["contained<br/>Separate trust boundaries"]
-
-    D --> P["Switchable primary model<br/>Sol 6.1 High or Astra when justified"]
-
-    A --> R["Routing primary<br/>usually Sol 6.1 Medium"]
-    R --> F["Role-based workers<br/>code / review / utility / ops"]
-
-
-    O --> DS["Durable primary state"]
-    DS --> BW["Bounded workers<br/>phases / tests / logs / synthesis"]
-
-    C --> TB["Separated helpers<br/>local code / network research / text only"]
+```text
+Your task
+|
++-- direct
+|   +-- keep context together
+|   `-- default: Sol 6.1 High
+|
++-- autopilot
+|   +-- route bounded work
+|   +-- default: Sol 6.1 Medium
+|   `-- workers: code / review / utility / ops
+|
++-- orchestrator
+|   +-- durable engineering lead
+|   +-- default: Sol 6.1 Medium
+|   `-- planning / workers / review / acceptance
+|
+`-- contained
+    +-- separate trust boundaries
+    `-- local code / network research / text only
 ```
 
 ## Quick start
