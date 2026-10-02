@@ -36,6 +36,12 @@ permissions:
   - action: skill
     resource: "*"
     effect: allow
+  - action: switchboard_harnesses
+    resource: "*"
+    effect: allow
+  - action: switchboard_delegate
+    resource: "*"
+    effect: allow
   - action: subagent
     resource: utility
     effect: allow
@@ -109,6 +115,8 @@ When invoked by `orchestrator`, treat the parent prompt as a bounded tranche. Do
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 
 `orchestrator` is never an automatic child route from `autopilot`.
+
+When `switchboard_harnesses` and `switchboard_delegate` are available, Switchboard is an optional external-worker path rather than a required dependency. Load the `switchboard` skill before using it, route there only when another coding harness materially helps, keep gating work in the foreground, and inspect returned evidence before acceptance. If the tools are absent, continue with native OpenCode routing.
 
 Automatic child-model policy: autonomously select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Honor an explicit user-selected available child model exactly; that is a user override, not an automatic route. Do not build an escalation ladder. Route by task shape, consequence, and evidence.
 

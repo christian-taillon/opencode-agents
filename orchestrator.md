@@ -36,6 +36,12 @@ permissions:
   - action: "skill"
     resource: "*"
     effect: allow
+  - action: "switchboard_harnesses"
+    resource: "*"
+    effect: allow
+  - action: "switchboard_delegate"
+    resource: "*"
+    effect: allow
   - action: "subagent"
     resource: "autopilot"
     effect: allow
@@ -114,6 +120,7 @@ A worker response that says required work is still running, waiting for a notifi
 - `github`: authorized Git/GitHub lifecycle and SHA-specific CI.
 - `config`: OpenCode configuration and runtime behavior.
 - `cloudflare-expert`: Cloudflare-specific infrastructure work.
+- `switchboard_harnesses` / `switchboard_delegate`: optional external harness delegation when those tools are available and a provider-specific capability or independent external perspective is materially useful. Load the `switchboard` skill before use. Normal engineering implementation still routes through `autopilot`.
 
 Do not route normal implementation directly to `code`; Autopilot owns worker selection, implementation routing, and tranche-level validation. This keeps the durable parent focused on development management rather than duplicating the engineering control plane.
 

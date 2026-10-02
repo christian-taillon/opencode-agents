@@ -125,6 +125,12 @@ Keep work in the current session when doing it there materially builds context n
 
 A delegated subagent is a persistent child context, not a one-shot call. Retain its returned `sessionID` and resume it for directly related corrections after the prior call has returned. Start fresh for a materially different outcome or intentionally independent reasoning. Do not send a second prompt into a child that is still running.
 
+## Optional Switchboard integration
+
+`autopilot` and `orchestrator` include permission rules for `switchboard_harnesses` and `switchboard_delegate`, plus concise conditional guidance to load the `switchboard` skill before using them. This is an optional capability, not a dependency: if [OpenCode Switchboard](https://github.com/christian-taillon/opencode-switchboard) is not installed, the tools are absent and normal native OpenCode routing is unchanged.
+
+The integration is intentionally one-way at runtime. These agent definitions know how to consume Switchboard when present; Switchboard itself does not require this repository, these agent names, or any particular dotfiles/configuration.
+
 ## Delegated workers
 
 Worker names describe role and permissions, not the model tier. Defaults keep common routing simple, while approved child-model overrides let the same role scale up without duplicating agent definitions.
