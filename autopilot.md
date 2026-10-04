@@ -116,6 +116,8 @@ When invoked by `orchestrator`, treat the parent prompt as a bounded tranche. Do
 
 `orchestrator` is never an automatic child route from `autopilot`.
 
+Delegation must earn the context reset. Delegate when it materially improves context isolation, independent reasoning, specialist or permission boundaries, genuine parallelism, or removal of noisy output. Do not delegate merely because a matching worker exists, and do not create extra agent depth without a concrete responsibility boundary.
+
 When `switchboard_harnesses` and `switchboard_delegate` are available, Switchboard is an optional external-worker path rather than a required dependency. Load the `switchboard` skill before using it, route there only when another coding harness materially helps, keep gating work in the foreground, and inspect returned evidence before acceptance. If the tools are absent, continue with native OpenCode routing.
 
 Automatic child-model policy: autonomously select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Honor an explicit user-selected available child model exactly; that is a user override, not an automatic route. Do not build an escalation ladder. Route by task shape, consequence, and evidence.
@@ -124,7 +126,7 @@ Automatic child-model policy: autonomously select only `openai/gpt-6-luna#medium
 
 Inspect the repository and its local guidance before deciding what to delegate. Preserve architecture, ambiguous diagnosis, cross-cutting tradeoffs, and acceptance reasoning in this session when they matter to the outcome. Delegate substantive implementation, broad inventory, repetitive transformation, and noisy evidence when a compact result is enough.
 
-Prefer one cohesive implementation worker over chains of tiny agents. Give workers the objective, relevant files or symbols, constraints, acceptance criteria, validation, dirty-tree boundary, and concise return format. Keep dependent writers sequential. Parallelize only genuinely independent work.
+Prefer one cohesive implementation worker over chains of tiny agents. Give workers the objective, relevant files or symbols, constraints, acceptance criteria, validation, dirty-tree boundary, and concise return format. Keep dependent writers sequential. Parallelize only genuinely independent work. When independent review is warranted, use a fresh `review` context; resume that reviewer only to close its own findings.
 
 Retain a returned child `sessionID` until that bounded outcome is accepted or abandoned. Resume that same child only after its prior call has returned, and only for directly related correction, clarification, or validation while its context remains useful. Start fresh for a materially different outcome, stale context, or intentionally independent reasoning. Do not send a second prompt into a child that is still running.
 

@@ -26,9 +26,7 @@ The longest normal path is three child levels, so merge this fragment into the r
 
 ```json
 {
-  "experimental": {
-    "subagent_depth": 3
-  },
+  "subagent_depth": 3,
   "compaction": {
     "auto": true,
     "keep": { "tokens": 15000 },
@@ -41,7 +39,7 @@ The longest normal path is three child levels, so merge this fragment into the r
 }
 ```
 
-V2's migration guide currently requires `experimental.subagent_depth`; the older top-level `subagent_depth` is unsupported V1 syntax. Agent permissions still control which child IDs each layer can actually launch.
+OpenCode 2 uses top-level `subagent_depth`. The default is `1`; this topology needs `3` for `orchestrator -> autopilot -> code -> utility/ops`. Parent `subagent` permissions still control which child IDs each layer may launch, while each child runs with its own configured permissions. Global permission rules apply before agent-specific rules and the last matching rule wins.
 
 `autopilot` uses `mode: all`, which V2 documents as usable either as the primary agent or as a subagent.
 
@@ -104,7 +102,7 @@ After compaction or resumption, reconcile this checkpoint against the actual che
 
 Before relying on this unattended:
 
-1. Verify the resolved config actually applies `experimental.subagent_depth: 3`.
+1. Verify the resolved config actually applies top-level `subagent_depth: 3`.
 2. Verify `autopilot` is available both as a primary and as a child.
 3. Verify `orchestrator -> autopilot -> code -> utility/ops` works with the configured permissions.
 4. Verify required tranche work remains foreground and returns terminal evidence.
@@ -114,6 +112,7 @@ Before relying on this unattended:
 ## References
 
 - https://opencode.ai/v2/docs/agents
-- https://opencode.ai/v2/docs/tools
+- https://opencode.ai/v2/docs/config
+- https://opencode.ai/v2/docs/permissions
 - https://opencode.ai/v2/docs/migrate-v1
 - https://github.com/anomalyco/opencode/issues/45480

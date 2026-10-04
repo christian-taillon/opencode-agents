@@ -10,6 +10,8 @@ Top-level workflows describe **how work should be performed**. Worker agents des
 
 Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/` directory, then review their models and permissions.
 
+The flat agent layout is deliberate. OpenCode 2 derives nested agent IDs from their path, so moving `review.md` to `specialists/review.md` would rename `review` to `specialists/review`. Keep existing agent files flat unless an ID migration is intentional. Markdown documentation stored under the agent tree uses `disabled: true` so it is not selectable as an agent.
+
 ## How it works
 
 Choose the workflow based on how you want work performed, then choose the primary model based on task difficulty. Delegated roles have sensible default models; `autopilot` and `orchestrator` may override the child model only within the approved routing set.
@@ -219,23 +221,16 @@ The parent inspects returned diffs and evidence, then either resumes the complet
 
 Independent review, Git lifecycle, configuration, and other specialist boundaries can still be invoked directly when appropriate. The critical execution chain stays synchronous so acceptance does not depend on background callback delivery.
 
-## Design
+## Design invariants
 
-- Optimize for accepted code quality, not raw inference cost alone.
-- Use GPT-6.1 Sol Medium for routing, the default `code` worker, and execution-oriented orchestration.
-- Use GPT-6.1 Sol High for interactive substantive engineering, hard/subtle `code` overrides, difficult diagnosis, and the default `review` worker.
-- Use `utility` for clearly mechanical, short-lived work.
-- Use Astra Medium only when concrete consequence, risk, or unresolved complexity warrants it; Astra Low is not part of the automatic coding ladder.
-- Keep Astra High, xHigh, and Max manual and exceptional rather than normal agent defaults.
-- Prefer one cohesive worker over chains of planners, coders, reviewers, and validators.
-- Primary orchestrators may read files, run useful commands, update plans and docs, change configuration, and make small obvious edits.
-- Preserve useful warm context. In `autopilot` and `orchestrator`, delegate bounded execution and evidence by default when a compact result is sufficient; keep decision-critical architecture, tradeoffs, diagnosis, and acceptance in the primary context.
-- Offload long tests, logs, and broad synthesis so engineering context stays focused.
-- Use independent review only when risk or uncertainty justifies a separate reasoning path.
-- Keep trust boundaries explicit. Contained agents separate local code authority from internet research.
-- Keep project-specific workflow policy in the repository's canonical guidance.
-  Use `AGENTS.md` to direct agents to it; use project-local configuration for
-  capabilities and skills for specialized execution details, not policy copies.
+- Optimize for accepted code quality, not raw inference cost or agent activity.
+- Preserve useful primary-session context. Delegate only when context isolation, independent reasoning, a specialist or permission boundary, genuine parallelism, or noisy-output removal justifies the context reset.
+- Delegate one cohesive outcome with explicit scope and acceptance criteria. Prefer a shallow topology over planner -> coder -> reviewer -> validator chains.
+- Keep work that gates the current outcome in the foreground. Background work is for genuinely independent, non-gating activity.
+- Keep worker role separate from model choice. Route by task shape and consequence rather than using an automatic escalation ladder.
+- Use a fresh context when independence is the objective, especially for acceptance review. Resume an existing child only when its accumulated context remains part of the same bounded outcome.
+- Keep trust and lifecycle boundaries explicit. Contained agents separate local code authority from internet research; `github` owns authorized repository lifecycle work.
+- Keep project-specific workflow policy in the repository's canonical guidance. Use `AGENTS.md` to point to that policy and skills for specialized execution details rather than copying policy into multiple agents.
 
 ## Nested orchestration
 
@@ -245,12 +240,12 @@ The deliberate long-workstream topology is:
 orchestrator -> autopilot -> code -> utility/ops
 ```
 
-That path requires `experimental.subagent_depth: 3`. Direct Autopilot use remains shallower. Permissions still bound which agents each layer may launch, and extra layers should exist only when they buy a clear context or responsibility boundary.
+That path requires top-level `subagent_depth: 3`. Direct Autopilot use remains shallower. The default is `1`, so deeper nesting must be enabled explicitly. Permissions still bound which agents each layer may launch, and extra layers should exist only when they buy a clear context or responsibility boundary.
 
 Critical work in this chain is foreground. Background execution remains available to direct Autopilot for genuinely independent work, but it is not used for dependencies that gate a tranche handoff or Orchestrator acceptance.
 
 ## Permissions
 
-Agent files use OpenCode 2 permission rules with `action`, `resource`, and `effect`. Common destructive operations are denied, external-directory access is limited or approval-gated, and contained profiles use stricter separation.
+Agent files use OpenCode 2 ordered permission rules with `action`, `resource`, and `effect`. Global rules apply before agent-specific rules, and the last matching rule wins. The broad-deny-then-explicit-allow pattern in these files is intentional. Common destructive operations are denied, external-directory access is limited or approval-gated, and contained profiles use stricter separation.
 
-Command blacklists are guardrails, not strong sandboxing. Use contained or external isolation when a real security boundary is required.
+A child uses its own configured permissions rather than inheriting a subset of its parent's agent rules. Parent `subagent` permissions control which child IDs may be launched. Command blacklists are guardrails, not strong sandboxing; use contained or external isolation when a real security boundary is required.

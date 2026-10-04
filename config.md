@@ -62,8 +62,10 @@ Before changing configuration:
 4. Preserve unrelated permissions, providers, models, commands, skills, and project policy.
 5. Validate the resulting structure against current documentation or schema when behavior is uncertain.
 
-For agent definitions, use current OpenCode 2 structures including ordered `permissions` rules with `action`, `resource`, and `effect`, model variants such as `provider/model#high` when supported, and `AGENTS.md` for behavioral or project instructions.
+For agent definitions, use current OpenCode 2 structures including ordered `permissions` rules with `action`, `resource`, and `effect`, model variants such as `provider/model#high` when supported, and `AGENTS.md` for behavioral or project instructions. Remember that global permission rules apply before agent-specific rules and the last matching rule wins; a child uses its own configured permissions, while the parent's `subagent` rules control which child IDs it may launch.
 
-For nested orchestration, use the current experimental configuration surface, including `experimental.subagent_depth` when appropriate.
+Prefer native V2 names in new configuration: `permissions`, `shell`, `subagent`, and `agents`. V1 forms may still be translated for compatibility, but do not introduce new legacy `permission`, `bash`, `task`, or `agent` configuration when authoring V2-native changes.
+
+For nested orchestration, use the top-level `subagent_depth` setting. The default is `1`; increase it only when the intended agent topology actually requires deeper nesting.
 
 Do not publish resolved diagnostics, API keys, tokens, or environment-provided credentials. Keep examples concise and separate global configuration from project-local policy.

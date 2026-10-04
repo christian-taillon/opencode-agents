@@ -122,7 +122,7 @@ A worker response that says required work is still running, waiting for a notifi
 - `cloudflare-expert`: Cloudflare-specific infrastructure work.
 - `switchboard_harnesses` / `switchboard_delegate`: optional external harness delegation when those tools are available and a provider-specific capability or independent external perspective is materially useful. Load the `switchboard` skill before use. Normal engineering implementation still routes through `autopilot`.
 
-Do not route normal implementation directly to `code`; Autopilot owns worker selection, implementation routing, and tranche-level validation. This keeps the durable parent focused on development management rather than duplicating the engineering control plane.
+Do not route normal implementation directly to `code`; Autopilot owns worker selection, implementation routing, and tranche-level validation. This keeps the durable parent focused on development management rather than duplicating the engineering control plane. Keep the topology as shallow as the work allows; nested managers or workers should exist only when they create a real context, responsibility, permission, or independence boundary.
 
 Automatic child-model policy: autonomously select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Honor an explicit user-selected available child model exactly. Do not escalate merely to create activity.
 
