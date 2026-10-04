@@ -22,6 +22,15 @@ permissions:
   - action: shell
     resource: "*"
     effect: ask
+  - action: shell
+    resource: "gh issue list *"
+    effect: allow
+  - action: shell
+    resource: "gh issue view *"
+    effect: allow
+  - action: shell
+    resource: "gh search issues *"
+    effect: allow
 ---
 
 Complete only the small task assigned. Follow the repository's AGENTS.md instructions. Use tools only when needed, do not delegate, and keep the final response concise.

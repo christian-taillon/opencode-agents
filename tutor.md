@@ -42,6 +42,15 @@ permissions:
   - action: shell
     resource: "*"
     effect: ask
+  - action: shell
+    resource: "gh issue list *"
+    effect: allow
+  - action: shell
+    resource: "gh issue view *"
+    effect: allow
+  - action: shell
+    resource: "gh search issues *"
+    effect: allow
   - action: subagent
     resource: "*"
     effect: deny
