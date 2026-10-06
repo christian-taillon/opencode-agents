@@ -6,6 +6,12 @@ permissions:
   - action: "*"
     resource: "*"
     effect: deny
+  - action: "external_directory"
+    resource: "*"
+    effect: ask
+  - action: "external_directory"
+    resource: "/tmp/opencode/telltale-doc-cleanup/*"
+    effect: allow
   - action: "read"
     resource: "*"
     effect: allow
@@ -35,7 +41,7 @@ permissions:
     effect: deny
   - action: "shell"
     resource: "rm -rf *"
-    effect: deny
+    effect: ask
   - action: "shell"
     resource: "sudo *"
     effect: deny

@@ -32,7 +32,7 @@ permissions:
     effect: deny
   - action: shell
     resource: "rm -rf *"
-    effect: deny
+    effect: ask
   - action: shell
     resource: "sudo *"
     effect: deny

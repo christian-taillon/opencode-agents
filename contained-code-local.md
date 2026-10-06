@@ -91,7 +91,7 @@ permissions:
     effect: deny
   - action: shell
     resource: "rm -rf *"
-    effect: deny
+    effect: ask
   - action: webfetch
     resource: "*"
     effect: deny

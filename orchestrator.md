@@ -49,6 +49,9 @@ permissions:
     resource: "utility"
     effect: allow
   - action: "subagent"
+    resource: "qwen-task"
+    effect: allow
+  - action: "subagent"
     resource: "review"
     effect: allow
   - action: "subagent"
@@ -80,10 +83,10 @@ permissions:
     effect: deny
   - action: "shell"
     resource: "rm -rf *"
-    effect: deny
+    effect: ask
   - action: "shell"
     resource: "rm -fr *"
-    effect: deny
+    effect: ask
   - action: "shell"
     resource: "sudo *"
     effect: deny

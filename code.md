@@ -77,10 +77,10 @@ permissions:
     effect: deny
   - action: "shell"
     resource: "rm -rf *"
-    effect: deny
+    effect: ask
   - action: "shell"
     resource: "rm -fr *"
-    effect: deny
+    effect: ask
   - action: "shell"
     resource: "rm -rf /tmp/opencode/*"
     effect: allow

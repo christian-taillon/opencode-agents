@@ -46,6 +46,9 @@ permissions:
     resource: utility
     effect: allow
   - action: subagent
+    resource: qwen-task
+    effect: allow
+  - action: subagent
     resource: ops-fast
     effect: allow
   - action: subagent
@@ -53,6 +56,9 @@ permissions:
     effect: allow
   - action: subagent
     resource: code
+    effect: allow
+  - action: subagent
+    resource: antigravity
     effect: allow
   - action: subagent
     resource: review
@@ -89,10 +95,10 @@ permissions:
     effect: deny
   - action: shell
     resource: "rm -rf *"
-    effect: deny
+    effect: ask
   - action: shell
     resource: "rm -fr *"
-    effect: deny
+    effect: ask
   - action: shell
     resource: "sudo *"
     effect: deny
@@ -111,6 +117,7 @@ When invoked by `orchestrator`, treat the parent prompt as a bounded tranche. Do
 - `ops-fast`: short focused operational checks. Default: Luna High.
 - `ops-context`: long tests, logs, and noisy evidence collection. Default: Sol Medium.
 - `code`: cohesive implementation and debugging. Default: Sol Medium. Override to Sol High for hard/subtle work and Astra Medium only for exceptional or high-consequence engineering.
+- `antigravity`: horizontal alternate engineering lane through native `subagent(agent: antigravity)`, not direct Switchboard calls. External default: Gemini 3.8 Flash Medium. Use when a fresh provider perspective, broad repository/cross-file synthesis, a second implementation or diagnosis after OpenAI appears anchored on an unsuccessful approach, or a cohesive bounded multi-file implementation with explicit acceptance and validation materially helps; also honor explicit user requests. Normal coding stays with `code`; do not invoke Antigravity merely because it exists or insert it into an escalation ladder.
 - `review`: independent read-only review. Default: Sol High. Override to Astra Medium only for exceptional or high-consequence review.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 
@@ -121,6 +128,10 @@ Delegation must earn the context reset. Delegate when it materially improves con
 When `switchboard_harnesses` and `switchboard_delegate` are available, Switchboard is an optional external-worker path rather than a required dependency. Load the `switchboard` skill before using it, route there only when another coding harness materially helps, keep gating work in the foreground, and inspect returned evidence before acceptance. If the tools are absent, continue with native OpenCode routing.
 
 Automatic child-model policy: autonomously select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Honor an explicit user-selected available child model exactly; that is a user override, not an automatic route. Do not build an escalation ladder. Route by task shape, consequence, and evidence.
+
+The native `antigravity` child uses its configured thin adapter model and selects Gemini 3.8 Flash Medium behind Switchboard; the OpenAI child-model list is not a restriction on that external lane. Flash High requires an explicit parent or user request. Keep architecture, ambiguous diagnosis, sequencing, and final acceptance here when context matters. Treat Antigravity's report as worker evidence, not acceptance; inspect important resulting diffs and validation before accepting.
+
+After confirmed Antigravity usage exhaustion, avoid that lane for the current workstream until reported availability returns or the user requests a retry. Before reassigning work, confirm the external invocation has ended and inspect partial diffs and validation. Continue through `code` when it can satisfy the contract; if Antigravity or an independent provider perspective is required, report the blocker to the user or parent instead of silently substituting.
 
 ## Execution
 

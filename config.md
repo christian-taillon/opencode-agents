@@ -25,6 +25,9 @@ permissions:
     resource: "*"
     effect: allow
   - action: external_directory
+    resource: "*"
+    effect: ask
+  - action: external_directory
     resource: "~/.config/opencode/**"
     effect: allow
   - action: shell
@@ -41,13 +44,19 @@ permissions:
     effect: deny
   - action: shell
     resource: "rm -rf *"
-    effect: deny
+    effect: ask
   - action: shell
     resource: "sudo *"
     effect: deny
   - action: subagent
     resource: "*"
     effect: deny
+  - action: subagent
+    resource: code
+    effect: allow
+  - action: subagent
+    resource: utility
+    effect: allow
 ---
 
 You are the OpenCode 2 configuration specialist.
