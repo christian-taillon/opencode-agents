@@ -57,6 +57,9 @@ permissions:
   - action: "subagent"
     resource: "utility"
     effect: allow
+  - action: "subagent"
+    resource: "qwen-task"
+    effect: allow
   - action: "shell"
     resource: "git commit*"
     effect: deny
@@ -111,7 +114,7 @@ Do not commit, push, publish, or discard user work. Git lifecycle belongs to the
 
 ## Supporting work is synchronous
 
-At depth, delegate only noisy checks/logs to `ops-context`, short evidence collection to `ops-fast`, or an already-decided mechanical change to `utility`. Do a concise check yourself when delegation costs more than it saves. Do not spawn coders, reviewers, managers, or Git workers.
+At depth, delegate only noisy checks/logs to `ops-context`, short evidence collection to `ops-fast`, cost-first focused tests or repetitive commands to `qwen-task` when available, or an already-decided mechanical change to `utility`. Resume the same Qwen child for related validation iterations while its context remains useful. Do a concise check yourself when delegation costs more than it saves. Do not spawn coders, reviewers, managers, or Git workers.
 
 Every child, shell command, test, build, or validation whose result is required for your handoff must run in the foreground. Use an appropriate timeout for a long foreground command instead of backgrounding it merely because it is slow. Never return a handoff that says required work is still running or that you are waiting for a completion notification.
 

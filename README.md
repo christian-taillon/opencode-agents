@@ -125,7 +125,7 @@ For `autopilot` and `orchestrator`, delegate bounded work when the parent can ac
 
 Keep work in the current session when doing it there materially builds context needed for architecture, sequential implementation decisions, ambiguous debugging, acceptance, or later user discussion. Trivial reads and concise commands also do not need a child when delegation would add more overhead than value.
 
-A delegated subagent is a persistent child context, not a one-shot call. Retain its returned `sessionID` and resume it for directly related corrections after the prior call has returned. Start fresh for a materially different outcome or intentionally independent reasoning. Do not send a second prompt into a child that is still running.
+A delegated subagent is a persistent child context, not a one-shot call. Retain its returned `sessionID` and resume it for directly related corrections after the prior call has returned. This applies to cheap mechanical workers too: a Qwen validation child can run a focused test, summarize a failure, then be resumed after a correction for the related rerun without paying a fresh-context cost each time. Start fresh for a materially different outcome or intentionally independent reasoning. Do not send a second prompt into a child that is still running.
 
 ## Optional Switchboard integration
 
@@ -140,6 +140,7 @@ Worker names describe role and permissions, not the model tier. Defaults keep co
 | Agent | Default model | Role |
 | --- | --- | --- |
 | `utility` | GPT-6 Luna Medium | Mechanical edits, docs, simple configuration, extraction, and focused validation |
+| `qwen-task` | Ollama Qwen | Cheap resumable mechanical commands, focused tests, and concise failure extraction |
 | `code` | GPT-6.1 Sol Medium | Cohesive software engineering and debugging; may be overridden to Sol High or Astra Medium |
 | `review` | GPT-6.1 Sol High | Independent read-only review; may be overridden to Astra Medium |
 | `ops-fast` | GPT-6 Luna High | Short operational checks and focused commands |
@@ -148,7 +149,7 @@ Worker names describe role and permissions, not the model tier. Defaults keep co
 | `config` | GPT-6.1 Sol Medium | OpenCode 2 configuration specialist |
 | `cloudflare-expert` | GPT-6.1 Sol High | Cloudflare infrastructure specialist |
 
-The automatic child-model allowlist is Luna Medium, Luna High, Sol Medium, Sol High, and Astra Medium. Do not automatically select another provider, model, or variant. Grok 4.7 High remains a manual `direct` choice.
+The automatic child-model override allowlist is Luna Medium, Luna High, Sol Medium, Sol High, and Astra Medium. Fixed-model cost workers such as `qwen-task` may still be selected by role when available; this is not a model override. Do not automatically invent another provider, model, or variant. Grok 4.7 High remains a manual `direct` choice.
 
 Containment also uses `contained-code-local`, `contained-net-research`, and `contained-text-only` as trust-boundary helpers. Those helpers inherit the selected `contained` model unless explicitly overridden.
 
@@ -206,6 +207,7 @@ hard/subtle engineering     -> code + Sol High override
 exceptional/high-risk code  -> code + Astra Medium override
 independent review          -> review (Sol High)
 high-consequence review     -> review + Astra Medium override
+focused mechanical tests    -> qwen-task when available
 short operational work      -> ops-fast
 large/noisy context         -> ops-context
 ```
