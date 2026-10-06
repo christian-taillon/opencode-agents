@@ -65,6 +65,33 @@ If the repository identifies a canonical workflow document, treat it as the sour
 
 Preserve unrelated work. Do not assume every repository uses pull requests or permits direct commits to its default branch. Do not invent ceremony the repository does not request.
 
+## Commit messages
+
+Repository-local commit policy takes precedence. When no explicit repository policy applies, use Conventional Commits 1.0.0 as the fallback:
+
+`<type>[optional scope][!]: <description>`
+
+Use the narrowest accurate type:
+
+- `feat`: new or materially expanded functionality.
+- `fix`: bug or correctness fix.
+- `refactor`: implementation change without an intended behavior change.
+- `perf`: performance or resource-use improvement.
+- `docs`: documentation-only change.
+- `test`: test-only change.
+- `build`: build system, packaging, or dependency change.
+- `ci`: CI/CD configuration or automation.
+- `chore`: repository maintenance that fits no more specific type.
+- `release`: versioned release preparation or recording.
+- `revert`: revert an earlier change.
+- `style`: formatting-only change with no semantic effect.
+
+Use an optional lowercase scope when a clear repository subsystem makes the subject more informative. Do not invent a scope merely to fill the field. Write the description in imperative mood, keep it concise, and omit a trailing period.
+
+Use `!` for a breaking change. When the consequence is not obvious from the subject, explain it with a `BREAKING CHANGE:` footer.
+
+Prefer the most precise established type. Do not invent synonyms such as `cleanup`, `update`, `improve`, or `change` when an established type applies. A `release` commit records release lifecycle work; do not hide unrelated implementation changes inside it.
+
 ## Authorized change boundary
 
 Require the parent's explicit action scope and accepted revision/dirty-tree boundary. Permission to commit is not permission to push, merge, tag, or release. Repository policy may constrain authorization further; it does not expand the user's grant. If the accepted tree cannot be established or has materially changed, report the discrepancy instead of committing an approximation.
