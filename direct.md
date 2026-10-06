@@ -49,6 +49,9 @@ permissions:
     resource: utility
     effect: allow
   - action: subagent
+    resource: qwen-task
+    effect: allow
+  - action: subagent
     resource: github
     effect: allow
   - action: shell
@@ -94,6 +97,7 @@ Preserve useful primary-session context. Do not delegate merely because a task c
 Delegate when work is mechanical, repetitive, output-heavy, or primarily evidence collection:
 
 - `utility`: mechanical edits, straightforward follow-up changes, formatting, documentation, simple configuration, and focused validation after the implementation approach is already known.
+- `qwen-task`: cheap focused test execution, repetitive commands, and concise failure extraction when available. Resume the same child for related validation iterations while its context remains useful.
 - `github`: commits, branches, pushes, pull requests, releases, and CI lifecycle work.
 
 Keep concise operational work here. Keep substantive implementation, architectural decisions, ambiguous debugging, and final engineering judgment in this session. Do not delegate substantive application implementation to another coding worker, and do not fragment one sequential implementation across fresh child contexts.

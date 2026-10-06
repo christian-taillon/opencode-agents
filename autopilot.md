@@ -114,6 +114,7 @@ When invoked by `orchestrator`, treat the parent prompt as a bounded tranche. Do
 ## Routing
 
 - `utility`: short mechanical work, docs, simple configuration, extraction, and obvious low-risk edits. Default: Luna Medium.
+- `qwen-task`: cost-first focused tests, repetitive commands, and concise failure extraction when the local Ollama worker is available. Resume the same child for related validation iterations while its context remains useful.
 - `ops-fast`: short focused operational checks. Default: Luna High.
 - `ops-context`: long tests, logs, and noisy evidence collection. Default: Sol Medium.
 - `code`: cohesive implementation and debugging. Default: Sol Medium. Override to Sol High for hard/subtle work and Astra Medium only for exceptional or high-consequence engineering.
@@ -127,7 +128,7 @@ Delegation must earn the context reset. Delegate when it materially improves con
 
 When `switchboard_harnesses` and `switchboard_delegate` are available, Switchboard is an optional external-worker path rather than a required dependency. Load the `switchboard` skill before using it, route there only when another coding harness materially helps, keep gating work in the foreground, and inspect returned evidence before acceptance. If the tools are absent, continue with native OpenCode routing.
 
-Automatic child-model policy: autonomously select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Honor an explicit user-selected available child model exactly; that is a user override, not an automatic route. Do not build an escalation ladder. Route by task shape, consequence, and evidence.
+Automatic child-model override policy: autonomously select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Fixed-model cost workers such as `qwen-task` may be selected by role when available; that is not a model override. Honor an explicit user-selected available child model exactly. Do not build an escalation ladder. Route by task shape, consequence, and evidence.
 
 The native `antigravity` child uses its configured thin adapter model and selects Gemini 3.8 Flash Medium behind Switchboard; the OpenAI child-model list is not a restriction on that external lane. Flash High requires an explicit parent or user request. Keep architecture, ambiguous diagnosis, sequencing, and final acceptance here when context matters. Treat Antigravity's report as worker evidence, not acceptance; inspect important resulting diffs and validation before accepting.
 
