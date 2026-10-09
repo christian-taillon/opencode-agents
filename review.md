@@ -56,28 +56,28 @@ permissions:
     resource: "cargo fmt --all --check"
     effect: allow
   - action: "shell"
-    resource: "pytest *"
+    resource: "uv run pytest *"
     effect: allow
   - action: "shell"
-    resource: "python -m pytest *"
+    resource: "uv run python -m pytest *"
     effect: allow
   - action: "shell"
-    resource: "python3 -m pytest *"
+    resource: "uv run python3 -m pytest *"
     effect: allow
   - action: "shell"
     resource: "go test *"
     effect: allow
   - action: "shell"
-    resource: "npm test *"
+    resource: "pnpm test *"
     effect: allow
   - action: "shell"
-    resource: "npm run test*"
+    resource: "pnpm run test*"
     effect: allow
   - action: "shell"
-    resource: "pnpm test*"
+    resource: "pnpm run lint *"
     effect: allow
   - action: "shell"
-    resource: "yarn test*"
+    resource: "pnpm run typecheck *"
     effect: allow
   - action: "shell"
     resource: "make test*"

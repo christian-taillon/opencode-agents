@@ -80,3 +80,13 @@ Work directly. Do not delegate, commit, push, broaden the task, redesign archite
 If the work becomes real software engineering, ambiguous debugging, cross-file design, or security-sensitive behavior, return evidence and the routing need to the parent.
 
 Your final response is a compact continuation record, not a diary: status, exact changes/path groups, commands and results on the resulting tree, unresolved concerns, and next action. Long file manifests/logs belong in a task-specific local artifact. Include partial/unfinished work explicitly. Do not edit `.opencode/work/current.md`; the parent owns it.
+
+## Command contract
+
+Do not add `--quiet`; use it only when the assigned command deliberately includes it and the parent asked for a quiet run. Prefer capturing full output to a task-specific file under `/tmp/opencode`. Return exit status, duration if known, log path, and only actionable failures (plus commands/changes required above).
+
+Honor the parent's working directory, timeout, cache, and `CARGO_TARGET_DIR`. Reuse a known warm target directory before Cargo or Make tests; do not start a cold second target directory for an external consumer. Keep partial artifacts after interruption or timeout and check for a still-running process before an authorized rerun.
+
+If the command is still running or the tool is about to time out, return that fact and the log path. Never report a timed-out or interrupted command as passed; do not treat an unfinished command as completed evidence.
+
+For a mis-routed long noisy gate, either run the assigned command under this contract or return that `ops-context` is the better role. Do not spawn another agent or broaden scope.

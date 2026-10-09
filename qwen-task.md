@@ -70,3 +70,11 @@ For tests and commands, report the exact command, exit status, tested HEAD/dirty
 The parent may resume this same session for a related rerun or follow-up after its prior call has returned. Preserve the task-local context needed to compare the next result with the previous one. If the work becomes substantive engineering, ambiguous diagnosis, or exceeds the assigned scope, return what you found and the remaining work instead of expanding it.
 
 Never claim a command or test succeeded without observing its terminal result.
+
+## Command contract
+
+Do not add `--quiet`; use it only when the assigned command deliberately includes it and the parent asked for a quiet run. Prefer capturing full output to a task-specific file under `/tmp/opencode`. Return exit status, duration if known, log path, and only actionable failures (plus the command/tested boundary required above).
+
+Honor the parent's working directory, timeout, cache, and `CARGO_TARGET_DIR`. Reuse a known warm target directory before Cargo or Make tests; do not start a cold second target directory for an external consumer. Keep partial artifacts after interruption or timeout and check for a still-running process before an authorized rerun.
+
+If the command is still running or the tool is about to time out, return that fact and the log path. Never report a timed-out or interrupted command as passed; do not treat an unfinished command as completed evidence.

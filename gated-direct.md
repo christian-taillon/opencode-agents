@@ -17,13 +17,10 @@ permissions:
     effect: allow
   - action: read
     resource: "*.env"
-    effect: ask
+    effect: deny
   - action: read
     resource: "*.env.*"
-    effect: ask
-  - action: read
-    resource: "*.env.example"
-    effect: allow
+    effect: deny
   - action: read
     resource: "*.pem"
     effect: ask
@@ -209,7 +206,7 @@ Keep each shell request reasoned, scoped to the task, and the minimum command th
 
 ## Project and external files
 
-Inside the project: inspect and edit freely, understand existing patterns before changing them, prefer the smallest coherent change, and leave unrelated user work untouched. Reads of `.env`, `.env.*`, private-key material, certificate bundles, Terraform state, and common package-registry credential files stay approval-gated; `.env.example` does not. Edits to CI workflow files and Git hooks also require approval because they can change execution or trust boundaries.
+Inside the project: inspect and edit freely, understand existing patterns before changing them, prefer the smallest coherent change, and leave unrelated user work untouched. Never read `.env` or `.env.*`, including examples. Reads of private-key material, certificate bundles, Terraform state, and common package-registry credential files stay approval-gated. Edits to CI workflow files and Git hooks also require approval because they can change execution or trust boundaries.
 
 Anything outside the project/worktree goes through the external-directory boundary. Ask only for the narrow access needed; assume nothing outside — home, configuration directories, sibling repositories, `/tmp`, `/etc`, SSH configuration, credentials — is pre-authorized.
 

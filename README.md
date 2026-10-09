@@ -63,6 +63,11 @@ Use Sol 6.1 High for the orchestrator when difficult architecture, diagnosis, or
 
 Choose the workflow first, then change the primary model when the task justifies it.
 
+The installed global configuration defaults new sessions to `autopilot`.
+Existing sessions retain their selected agent. `direct` remains an explicit
+choice for cohesive interactive engineering; `/program` selects `orchestrator`
+to replace manual planning and execution handoffs for longer workstreams.
+
 ## Primary workflows
 
 | Agent | Use it when |
@@ -123,7 +128,15 @@ For `autopilot` and `orchestrator`, delegate bounded work when the parent can ac
 - genuinely independent work can proceed in parallel; or
 - a cohesive bounded worker can own the outcome without needing most of the parent's accumulated reasoning.
 
-Keep work in the current session when doing it there materially builds context needed for architecture, sequential implementation decisions, ambiguous debugging, acceptance, or later user discussion. Trivial reads and concise commands also do not need a child when delegation would add more overhead than value.
+Keep architecture, sequential implementation decisions, ambiguous debugging, and acceptance judgment in the current session when they need accumulated context. Do not delegate implementation/review merely to create depth. This context-locality preference does not override command-only validation routing or repository `AGENTS.md` command-delegation policy.
+
+Command-only checks (tests, format checks, Clippy, `git diff --check`, OpenSpec validation, and command-only make targets) go to `qwen-task` for focused/repetitive commands when available, `ops-fast` for short operational checks, or `ops-context` for long compiles, multi-feature gates, large logs, and commands expected to exceed about two minutes or emit noisy output. Resume the same Qwen child for a related rerun. Supply the exact command, working directory, timeout, known warm cache/`CARGO_TARGET_DIR`, and return contract: exit status plus actionable failures only and captured log path.
+
+Wait for the validation child in the foreground: needing the result is not a reason to run a long command in the parent or background a dependency. The long timeout belongs on the child's command. Only a few-second command with short output, or interactive judgment, live/secret data, or a cohesive owner debug loop is an exception. Cold compiles, `--quiet` tests, embedding-contract checks, and reruns after timeout/interrupt are not exceptions; neither “delegation must earn the context reset” nor trivial-one-command/latency arguments override this rule.
+
+Do not add `--quiet` to compiles/tests unless the user explicitly asks. Capture noisy full output in a task-specific file under `/tmp/opencode`. Reuse a known warm `CARGO_TARGET_DIR` before Cargo/Make tests, including external-consumer checks. After timeout/interrupt, check whether the process is still running, keep partial artifacts, and route the rerun to a validation child with the warm cache and sufficient timeout; do not duplicate a running process or restart the long command in the parent.
+
+Agent-definition and OpenCode routing repairs belong to `config`, not an engineering parent editing `~/.config/opencode/agents`. Hand off the observed failure/evidence, affected roles/paths, desired behavior/acceptance, global/project overrides, dirty-tree boundary, and edit/commit/reload authority. Markdown agents own these role prompts; do not duplicate them into `opencode.json`.
 
 A delegated subagent is a persistent child context, not a one-shot call. Retain its returned `sessionID` and resume it for directly related corrections after the prior call has returned. This applies to cheap mechanical workers too: a Qwen validation child can run a focused test, summarize a failure, then be resumed after a correction for the related rerun without paying a fresh-context cost each time. Start fresh for a materially different outcome or intentionally independent reasoning. Do not send a second prompt into a child that is still running.
 
@@ -251,3 +264,25 @@ Critical work in this chain is foreground. Background execution remains availabl
 Agent files use OpenCode 2 ordered permission rules with `action`, `resource`, and `effect`. Global rules apply before agent-specific rules, and the last matching rule wins. The broad-deny-then-explicit-allow pattern in these files is intentional. Common destructive operations are denied, external-directory access is limited or approval-gated, and contained profiles use stricter separation.
 
 A child uses its own configured permissions rather than inheriting a subset of its parent's agent rules. Parent `subagent` permissions control which child IDs may be launched. Command blacklists are guardrails, not strong sandboxing; use contained or external isolation when a real security boundary is required.
+
+The installed global configuration additionally hard-denies read-tool access to
+`*.env` and `*.env.*` (including examples/backups), and shell commands explicitly
+naming `.env`. These policies override agent allows and saved approvals; they
+are not OS isolation for arbitrary programs. Keep environment-file contents out
+of searches and delegated context. Only `config` may load `customize-opencode`,
+and only when needed; other skills remain unchanged.
+
+## Configuration regression checks
+
+Run the focused static contract suite after changing installed agents or global
+routing/permissions:
+
+```sh
+uv run tests/test_config.py
+```
+
+The suite checks agent discovery, ordered permission and hard-policy behavior,
+default/specialist routing, reviewer commands, skill isolation, and the retained
+orchestration topology. It reads configuration without resolving credentials
+and never opens environment files. It does not prove runtime sandboxing or
+plugin behavior. Use `--config` and `--agents` for another installation.

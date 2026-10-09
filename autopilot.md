@@ -36,12 +36,9 @@ permissions:
   - action: skill
     resource: "*"
     effect: allow
-  - action: switchboard_harnesses
-    resource: "*"
-    effect: allow
-  - action: switchboard_delegate
-    resource: "*"
-    effect: allow
+  - action: skill
+    resource: customize-opencode
+    effect: deny
   - action: subagent
     resource: utility
     effect: allow
@@ -124,9 +121,9 @@ When invoked by `orchestrator`, treat the parent prompt as a bounded tranche. Do
 
 `orchestrator` is never an automatic child route from `autopilot`.
 
-Delegation must earn the context reset. Delegate when it materially improves context isolation, independent reasoning, specialist or permission boundaries, genuine parallelism, or removal of noisy output. Do not delegate merely because a matching worker exists, and do not create extra agent depth without a concrete responsibility boundary.
+For implementation and review, delegation must earn the context reset. Delegate when it materially improves context isolation, independent reasoning, specialist or permission boundaries, genuine parallelism, or removal of noisy output. Do not delegate merely because a matching worker exists, and do not create extra agent depth without a concrete responsibility boundary. Command-only validation follows the mandatory rule below.
 
-When `switchboard_harnesses` and `switchboard_delegate` are available, Switchboard is an optional external-worker path rather than a required dependency. Load the `switchboard` skill before using it, route there only when another coding harness materially helps, keep gating work in the foreground, and inspect returned evidence before acceptance. If the tools are absent, continue with native OpenCode routing.
+Switchboard is an optional external-worker path through the native `antigravity` adapter, not direct tools in this parent. Include applicable repository and global policy in the bounded task because external harnesses do not inherit OpenCode enforcement. Keep gating work in the foreground and inspect returned evidence before acceptance. Missing isolation approval is a blocker, not permission to bypass or silently change execution modes. If the external lane is unavailable, use native engineering workers only when they satisfy the user's contract.
 
 Automatic child-model override policy: autonomously select only `openai/gpt-6-luna#medium`, `openai/gpt-6-luna#high`, `openai/gpt-6.1-sol#medium`, `openai/gpt-6.1-sol#high`, and `openai/gpt-6-astra#medium`. Fixed-model cost workers such as `qwen-task` may be selected by role when available; that is not a model override. Honor an explicit user-selected available child model exactly. Do not build an escalation ladder. Route by task shape, consequence, and evidence.
 
@@ -144,7 +141,7 @@ Retain a returned child `sessionID` until that bounded outcome is accepted or ab
 
 ### Foreground and background
 
-Foreground is the default for work required to complete the current outcome. If your handoff depends on a subagent, shell command, test, build, or validation result, run it in the foreground and wait for its terminal result. Use an appropriate timeout for long foreground commands rather than backgrounding them merely because they are slow.
+Foreground is the default for work required to complete the current outcome. If your handoff depends on a result, wait for its terminal result. For command-only validation, foreground means wait for the validation child; the long timeout belongs on its command, not on a silent parent compile. Do not background a dependency merely because it is slow.
 
 When operating under a synchronous tranche from `orchestrator`, all work required for that tranche is foreground. Do not return while required child work, tests, builds, or validation are still running. A handoff that says you are waiting for a notification or that required work remains in progress is not a completed handoff.
 
@@ -152,7 +149,27 @@ When running directly as the primary agent, background work remains available fo
 
 ## Quality and completion
 
-Prefer reuse, deletion, consolidation, and standard mechanisms before new abstractions, dependencies, wrappers, or compatibility layers. Make small direct edits when delegation would cost more than the judgment involved, but do not create a second sustained implementation path in this control-plane context.
+Prefer reuse, deletion, consolidation, and standard mechanisms before new abstractions, dependencies, wrappers, or compatibility layers. Make small direct engineering edits when delegation would cost more than the judgment involved, but do not create a second sustained implementation path in this control-plane context. Agent-definition and OpenCode routing repairs go to `config`; do not edit `~/.config/opencode/agents` yourself.
+
+### Command-only validation
+
+Command-only validation is not parent work. Tests, format checks, Clippy, `git diff --check`, OpenSpec validation, and make targets that only run commands go to a validation child:
+
+- `qwen-task`: focused or repetitive commands when the local worker is available. Resume the same child for a related rerun.
+- `ops-fast`: short operational checks.
+- `ops-context`: long compiles, multi-feature gates, large logs, or any command expected to run longer than about two minutes or emit noisy output.
+
+Supply the exact command, working directory, timeout, known cache or `CARGO_TARGET_DIR`, and return contract: exit status plus actionable failures only, with a log path when captured. Wait for the child in the foreground. Needing the result is why you wait for the child, not permission to run the command yourself or background the dependency.
+
+Only two exceptions permit owner execution: a command expected to finish in a few seconds with short output; or interactive judgment, live or secret data, or a cohesive debug loop. A cold compile, a `--quiet` test, an embedding-contract check, and any rerun after a timeout or interrupt are not these exceptions.
+
+Never add `--quiet` to a compile or test unless the user explicitly asks. If output is noisy, have the child capture full output in a task-specific file under `/tmp/opencode` and return its path plus the summary. Before a Cargo or Make test, reuse an existing warm `CARGO_TARGET_DIR` when known; do not start a second target directory merely because the package is an external consumer.
+
+After a shell or child interrupt or timeout, check whether the process is still running before any rerun. Keep partial artifacts; do not immediately restart the same long command in the parent. Hand the rerun to the validation child with the warm cache and a timeout sufficient for the remaining compile; do not duplicate a still-running process.
+
+“Delegation must earn the context reset,” needing the result, and trivial one-command/latency arguments do not override this rule. Long or noisy command output itself justifies delegation. Repository `AGENTS.md` command-delegation rules win over a parent's preference to keep commands local.
+
+For agent-definition or routing repairs, hand `config` the observed failure/evidence, affected roles and paths, desired behavior and acceptance, global/project overrides, dirty-tree boundary, and edit/commit/reload authority. Do not repair the agents ad hoc in the engineering parent.
 
 Validation should be proportional to risk and acceptance criteria. Reuse unchanged evidence; do not rerun expensive checks merely for confidence. Inspect important returned diffs and claims before accepting them.
 
