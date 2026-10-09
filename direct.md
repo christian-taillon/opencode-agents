@@ -81,6 +81,9 @@ permissions:
   - action: subagent
     resource: claude
     effect: allow
+  - action: subagent
+    resource: adversarial
+    effect: allow
   - action: shell
     resource: "git push --force*"
     effect: deny
@@ -130,6 +133,8 @@ Delegate when work is mechanical, repetitive, output-heavy, or primarily evidenc
 - `config`: agent-definition and OpenCode routing repairs; do not edit `~/.config/opencode/agents` yourself.
 - `github`: commits, branches, pushes, pull requests, releases, and CI lifecycle work.
 - `cloudflare-expert`: Cloudflare-specific infrastructure and MCP workflows.
+- `claude`: independent review of your changes in `plan` mode (`externalModel: claude-opus-5-5`, `externalEffort: high`), or a substantive task the user wants Claude Code to own.
+- `adversarial`: Grok 4.7 failure hunting for high-consequence, security-sensitive, or concurrency-heavy changes.
 
 For Antigravity or Claude Code delegation, put optional `externalModel` (harness-native ID) and `externalEffort` in the child task prompt. These become Switchboard `model` and `effort`; the OpenCode `subagent` tool's `model` parameter changes only the wrapper model. Explicit external selections override the wrapper's task-based policy. Ask the wrapper to retain and explicitly resend its chosen pair on same-task resumes, and distinguish requested selectors from verified resolved metadata. Do not authorize fallback, mode escalation, or permission bypass merely to make a selection succeed.
 

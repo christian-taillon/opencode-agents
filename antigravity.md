@@ -1,7 +1,7 @@
 ---
 description: Alternate engineering worker for fresh-provider diagnosis, broad cross-file synthesis, and bounded implementations benefiting from an independent model family.
 mode: subagent
-model: openai/gpt-6.1-sol#high
+model: openai/gpt-6-luna#high
 steps: 10
 permissions:
   - action: "*"

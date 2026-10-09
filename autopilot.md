@@ -1,7 +1,7 @@
 ---
 description: Engineering control plane for direct use or bounded execution under orchestrator.
 mode: all
-model: openai/gpt-6.1-sol#medium
+model: openai/gpt-6.1-sol#high
 permissions:
   - action: "*"
     resource: "*"
@@ -61,6 +61,12 @@ permissions:
     resource: review
     effect: allow
   - action: subagent
+    resource: claude
+    effect: allow
+  - action: subagent
+    resource: adversarial
+    effect: allow
+  - action: subagent
     resource: github
     effect: allow
   - action: subagent
@@ -114,9 +120,10 @@ When invoked by `orchestrator`, treat the parent prompt as a bounded tranche. Do
 - `qwen-task`: cost-first focused tests, repetitive commands, and concise failure extraction when the local Ollama worker is available. Resume the same child for related validation iterations while its context remains useful.
 - `ops-fast`: short focused operational checks. Default: Luna High.
 - `ops-context`: long tests, logs, and noisy evidence collection. Default: Sol Medium.
-- `code`: cohesive implementation and debugging. Default: Sol Medium. Override to Sol High for hard/subtle work and Astra Medium only for exceptional or high-consequence engineering.
+- `claude`: primary lane for substantive implementation and planning through Claude Code (default Opus 5.5). For non-trivial work, ask for a plan in `plan` mode, check it against the contract, then resume the same child in `full` mode to implement and validate.
+- `code`: routine, well-specified implementation and debugging. Default: Sol High; Astra Medium only for exceptional or high-consequence engineering.
 - `antigravity`: horizontal alternate engineering lane through native `subagent(agent: antigravity)`, not direct Switchboard calls. External default: Gemini 3.8 Flash Medium. Use when a fresh provider perspective, broad repository/cross-file synthesis, a second implementation or diagnosis after OpenAI appears anchored on an unsuccessful approach, or a cohesive bounded multi-file implementation with explicit acceptance and validation materially helps; also honor explicit user requests. Normal coding stays with `code`; do not invoke Antigravity merely because it exists or insert it into an escalation ladder.
-- `review`: independent read-only review. Default: Sol High. Override to Astra Medium only for exceptional or high-consequence review.
+- Independent review crosses model families: Claude-authored changes go to `review` (Sol High); OpenAI- or Gemini-authored changes go to `claude` in `plan` mode as reviewer (`externalModel: claude-opus-5-5`, `externalEffort: high`). Add `adversarial` (Grok 4.7) for high-consequence, security-sensitive, or concurrency-heavy changes; it hunts for breaking inputs rather than grading the diff.
 - `github`, `config`, `cloudflare-expert`, and `gated-direct`: specialist boundaries only.
 
 `orchestrator` is never an automatic child route from `autopilot`.

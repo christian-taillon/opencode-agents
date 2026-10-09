@@ -1,7 +1,7 @@
 ---
 description: Model-agnostic implementation worker for cohesive software engineering, debugging, refactoring, and integration.
 mode: subagent
-model: openai/gpt-6.1-sol#medium
+model: openai/gpt-6.1-sol#high
 permissions:
   - action: "*"
     resource: "*"

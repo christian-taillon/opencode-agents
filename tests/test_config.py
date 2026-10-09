@@ -159,9 +159,13 @@ class ConfigContracts(unittest.TestCase):
             self.assertTrue(self.agents[name].get("mode", "primary") in {"primary", "all"},
                             "Default must be primary-capable")
             self.assertEqual(self.config["subagent_depth"], 3)
-        for parent, child in zip(("orchestrator", "autopilot", "code"),
-                                 ("autopilot", "code", "qwen-task")):
+        for parent, child in (("orchestrator", "claude"), ("orchestrator", "code"),
+                              ("autopilot", "claude"), ("autopilot", "code"),
+                              ("code", "qwen-task")):
             self.expect(parent, "subagent", child, "allow")
+        self.expect("orchestrator", "subagent", "autopilot", "deny")
+        for parent in ("orchestrator", "autopilot", "direct"):
+            self.expect(parent, "subagent", "adversarial", "allow")
 
     def test_secret_hard_denials_survive_broad_allows(self):
         permissive = [{"action": "*", "resource": "*", "effect": "allow"}]
@@ -196,9 +200,10 @@ class ConfigContracts(unittest.TestCase):
                 self.expect("review", "shell", command + suffix, "allow")
         for command in ("npm test", "npm run test", "yarn test", "pytest", "pytest tests"):
             self.expect("review", "shell", command, "deny")
-        self.expect("review", "edit", "src/main.py", "deny")
-        for child in self.agents:
-            self.expect("review", "subagent", child, "deny")
+        for reviewer in ("review", "adversarial"):
+            self.expect(reviewer, "edit", "src/main.py", "deny")
+            for child in self.agents:
+                self.expect(reviewer, "subagent", child, "deny")
 
     def test_evaluator_order_and_wildcards(self):
         self.assertTrue(matches("a?*", "abc/def"))
