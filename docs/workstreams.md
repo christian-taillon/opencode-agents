@@ -2,31 +2,29 @@
 disabled: true
 ---
 
-# Bounded workstreams with Autopilot execution
+# Bounded workstreams with Claude/Code execution
 
-`orchestrator` is the durable development manager. It owns architecture and planning context, sequencing, recovery, acceptance, and the user conversation. `autopilot` is the engineering control plane and can run either directly as a primary agent or as a bounded child.
+`orchestrator` is the durable development manager. It owns architecture and planning context, sequencing, recovery, acceptance, and the user conversation. `autopilot` is a standalone engineering control plane, never an orchestrator child.
 
 ## Topology
 
 ```text
 orchestrator (primary)
-  +-- autopilot (foreground bounded tranche)
-  |     +-- code
-  |     |     +-- qwen-task / ops-context / ops-fast / utility
-  |     +-- review / utility / qwen-task / ops when useful
+  +-- claude / code (foreground bounded tranche)
+  |     +-- ops-context / ops-fast / qwen-task / utility
   +-- review (independent acceptance review when warranted)
   +-- github / config / other specialists
 ```
 
-`orchestrator` does not normally route implementation directly to `code`. It defines the next tranche and its acceptance contract, then lets Autopilot choose the engineering workers needed to complete that tranche.
+`orchestrator` defines the next tranche and its acceptance contract, then routes implementation directly to `claude` or `code`. Implementing agents run their own tests, linters, and builds and read the raw failures; only long or noisy runs go to `ops-context`.
 
 ## OpenCode V2 configuration
 
-The longest normal path is three child levels, so merge this fragment into the resolved V2 configuration:
+The longest normal path is two child levels, so merge this fragment into the resolved V2 configuration:
 
 ```json
 {
-  "subagent_depth": 3,
+  "subagent_depth": 2,
   "compaction": {
     "auto": true,
     "keep": { "tokens": 15000 },
@@ -39,9 +37,9 @@ The longest normal path is three child levels, so merge this fragment into the r
 }
 ```
 
-OpenCode 2 uses top-level `subagent_depth`. The default is `1`; this topology needs `3` for `orchestrator -> autopilot -> code -> utility/ops`. Parent `subagent` permissions still control which child IDs each layer may launch, while each child runs with its own configured permissions. Global permission rules apply before agent-specific rules and the last matching rule wins.
+OpenCode 2 uses top-level `subagent_depth`. The default is `1`; this topology needs `2` for `orchestrator -> claude | code -> ops-context | ops-fast | qwen-task | utility`. Parent `subagent` permissions still control which child IDs each layer may launch, while each child runs with its own configured permissions. Global permission rules apply before agent-specific rules and the last matching rule wins.
 
-`autopilot` uses `mode: all`, which V2 documents as usable either as the primary agent or as a subagent.
+`autopilot` uses `mode: all`, which V2 documents as usable either as the primary agent or as a subagent; that capability does not make it an orchestrator child.
 
 ## Foreground contract
 
@@ -50,8 +48,8 @@ OpenCode V2 foreground subagent calls wait for the child result; `background: tr
 For `/program` work:
 
 1. Orchestrator selects one bounded tranche.
-2. Orchestrator launches Autopilot in the foreground.
-3. Autopilot completes every required child, command, test, build, and validation before returning.
+2. Orchestrator launches Claude or Code in the foreground.
+3. The implementing agent completes every required child, command, test, build, and validation before returning.
 4. Orchestrator inspects the returned diff and evidence, then continues to correction, review, lifecycle work, or the next tranche.
 
 Required work must not return as `still running`, `waiting for notification`, or equivalent. Long commands should normally use a sufficient foreground timeout rather than background execution merely because they are slow.
@@ -102,12 +100,12 @@ After compaction or resumption, reconcile this checkpoint against the actual che
 
 Before relying on this unattended:
 
-1. Verify the resolved config actually applies top-level `subagent_depth: 3`.
-2. Verify `autopilot` is available both as a primary and as a child.
-3. Verify `orchestrator -> autopilot -> code -> qwen-task/utility/ops` works with the configured permissions.
+1. Verify the resolved config applies top-level `subagent_depth` of at least `2`.
+2. Verify `autopilot` is available as a standalone control plane, not an orchestrator child.
+3. Verify `orchestrator -> claude | code -> ops-context | ops-fast | qwen-task | utility` works with the configured permissions.
 4. Verify required tranche work remains foreground and returns terminal evidence.
-5. Verify a completed Autopilot child can be resumed by `sessionID` for a focused correction.
-6. Verify a fresh tranche creates a fresh Autopilot child.
+5. Verify a completed Claude/Code child can be resumed by `sessionID` for a focused correction.
+6. Verify a fresh tranche creates a fresh Claude/Code child.
 
 ## References
 

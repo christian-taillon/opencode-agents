@@ -1,5 +1,5 @@
 {
-  "subagent_depth": 3,
+  "subagent_depth": 2,
   "compaction": {
     "auto": true,
     "keep": {
