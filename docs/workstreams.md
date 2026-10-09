@@ -107,6 +107,8 @@ Before relying on this unattended:
 5. Verify a completed Claude/Code child can be resumed by `sessionID` for a focused correction.
 6. Verify a fresh tranche creates a fresh Claude/Code child.
 
+For external harness tranches, [Switchboard's delegation contract](https://github.com/christian-taillon/opencode-switchboard/blob/main/skills/switchboard/SKILL.md) covers the execution/session boundary; [opencode-agents](https://github.com/christian-taillon/opencode-agents) supplies the opinionated parent routing described here.
+
 ## References
 
 - https://opencode.ai/v2/docs/agents

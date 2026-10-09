@@ -10,6 +10,14 @@ Copy the agents you want into `~/.config/opencode/agents/` or a project's `.open
 
 The flat layout is deliberate: OpenCode 2 derives agent IDs from paths, so moving `review.md` to `specialists/review.md` renames `review` to `specialists/review`. Markdown documentation under the agent tree uses `disabled: true` so it is not selectable.
 
+## Companion: Switchboard
+
+[OpenCode Switchboard](https://github.com/christian-taillon/opencode-switchboard) provides the plugin execution/session contract and standalone wrapper templates for external harness subagents. This repository provides opinionated parent routing and customized agent definitions, including `claude` and `antigravity`.
+
+Install the backend using [Switchboard's installation instructions](https://github.com/christian-taillon/opencode-switchboard#install); its [optional native profiles](https://github.com/christian-taillon/opencode-switchboard#optional-native-subagent-profiles) are standalone alternatives to these customized wrappers. See its [delegation contract](https://github.com/christian-taillon/opencode-switchboard/blob/main/skills/switchboard/SKILL.md) for task and session handling.
+
+The repositories are installed and updated separately; neither automatically synchronizes the other. Generic Switchboard use does not require this agent collection or its routing policy.
+
 ## Design
 
 Three ideas drive the routing:
