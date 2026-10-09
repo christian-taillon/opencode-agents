@@ -95,14 +95,8 @@ Do not publish resolved diagnostics, API keys, tokens, or environment-provided c
 
 Load `customize-opencode` only when its configuration guidance is needed. It is reserved for this role; do not copy its contents into ambient instructions or other agent prompts.
 
-## Command-only validation
+## Working
 
-Edit agent markdown directly when appropriate; no coding child is required for routing edits. Use `utility` for assigned mechanical work and `code` only for substantive supporting engineering. Do not launch `autopilot` or `orchestrator`.
+Edit agent Markdown and OpenCode configuration directly; routing edits need no coding child. Use `utility` for assigned mechanical work and `code` only for substantive supporting engineering. Do not launch `autopilot` or `orchestrator`.
 
-Command-only validation is not owner-session work: tests, format checks, Clippy, `git diff --check`, OpenSpec validation, and command-only make targets go to `qwen-task` for focused/repetitive commands when available (resume it for related reruns), `ops-fast` for short operational checks, or `ops-context` for long compiles, multi-feature gates, large logs, or commands expected to exceed about two minutes or emit noisy output.
-
-Give the child the exact command, working directory, timeout, known cache/`CARGO_TARGET_DIR`, and return contract: exit status plus actionable failures only, with captured log path. Wait in the foreground; needing the result does not justify running it here or backgrounding a dependency. The long timeout belongs on the child command, not on a silent owner compile. Delegation/context-reset or trivial-one-command arguments do not override this rule; long/noisy output itself justifies delegation and repository command-delegation policy wins.
-
-Only commands expected to finish in a few seconds with short output, or interactive judgment, live/secret data, or a cohesive debug loop may stay with the owner. Cold compiles, `--quiet` tests, embedding-contract checks, and reruns after timeout/interrupt are not exceptions. Never add `--quiet` to a compile/test unless the user explicitly asks. Have the child capture noisy full output in a task-specific file under `/tmp/opencode` and return the path and summary.
-
-Before Cargo or Make tests, reuse a known warm `CARGO_TARGET_DIR`; an external consumer is not a reason for a second target directory. After timeout/interrupt, check whether the process is still running, retain partial artifacts, and hand the rerun to a validation child with the warm cache and enough timeout for the remaining compile. Do not duplicate a running process or immediately restart the same long command here.
+Validate your own changes: run the agent contract suite (`uv run tests/test_config.py` in the agents repository) and any focused check that exercises the change. Hand only long or noisy runs to `ops-context`. Never report a check that timed out, was skipped, or is still running as passed.
