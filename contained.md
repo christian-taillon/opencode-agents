@@ -1,5 +1,5 @@
 ---
-description: Contained orchestrator that separates local code authority from internet research.
+description: Optional primary that separates local execution, public research, and text-only trust boundaries.
 mode: primary
 model: openai/gpt-6.1-sol#medium
 permissions:

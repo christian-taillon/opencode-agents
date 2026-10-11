@@ -1,0 +1,16 @@
+{
+  "commands": {
+    "claude": {
+      "description": "Explicitly invoke the installed Claude Code adapter",
+      "agent": "claude",
+      "subagent": true,
+      "template": "$ARGUMENTS"
+    },
+    "antigravity": {
+      "description": "Explicitly invoke the installed Antigravity adapter",
+      "agent": "antigravity",
+      "subagent": true,
+      "template": "$ARGUMENTS"
+    }
+  }
+}

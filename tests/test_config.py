@@ -2,11 +2,10 @@
 # requires-python = ">=3.11"
 # dependencies = ["PyYAML>=6,<7"]
 # ///
-"""Static OpenCode contracts, not a runtime sandbox.
+"""Small static contracts for V2.0.26; not a runtime or sandbox test.
 
-Saved approvals and plugins are not included. These checks do not prove that an
-arbitrary script cannot read secrets. Only the supplied JSON and agent Markdown
-are read; credentials are never interpolated or included in diagnostics.
+Default inputs are portable and sanitized. --config opts into inspecting a
+supplied JSON installation candidate without credential interpolation/output.
 """
 
 import argparse
@@ -17,219 +16,510 @@ import unittest
 
 import yaml
 
+ROOT = Path(__file__).resolve().parents[1]
+PREVIOUS_CLOUDFLARE = "cloudflare" + "-expert"
+RETIRED = {
+    "code",
+    "orchestrator",
+    "ops-fast",
+    "ops-context",
+    "qwen-task",
+    "yolo",
+    PREVIOUS_CLOUDFLARE,
+}
+PRIMARIES = {"direct", "autopilot", "contained"}
+ADAPTERS = {"claude", "antigravity"}
+LEAVES = {
+    "coder",
+    "review",
+    "adversarial",
+    "utility",
+    "operations",
+    "config",
+    "github",
+    "cloudflare",
+    "gated-direct",
+    "tutor",
+    *ADAPTERS,
+    "contained-code-local",
+    "contained-net-research",
+    "contained-text-only",
+}
+FIELDS = {
+    "model",
+    "request",
+    "system",
+    "description",
+    "mode",
+    "hidden",
+    "color",
+    "steps",
+    "disabled",
+    "permissions",
+}
+CONFIG_FIELDS = {
+    "$schema",
+    "shell",
+    "model",
+    "default_agent",
+    "update",
+    "share",
+    "enterprise",
+    "username",
+    "permissions",
+    "agents",
+    "snapshots",
+    "watcher",
+    "formatter",
+    "lsp",
+    "media",
+    "tool_output",
+    "mcp",
+    "compaction",
+    "skills",
+    "commands",
+    "instructions",
+    "references",
+    "websearch",
+    "plugins",
+    "worktree",
+    "warming",
+    "providers",
+    "experimental",
+}
 
-def matches(pattern, value, shell=False):
-    """Whole-value wildcards; shell's trailing ' *' also matches no arguments."""
-    if shell and pattern.endswith(" *") and value == pattern[:-2]:
-        return True
-    expression = re.escape(pattern).replace(r"\*", ".*").replace(r"\?", ".")
-    return re.fullmatch(expression, value, flags=re.DOTALL) is not None
+
+def read_safe(path):
+    if any(p.is_symlink() for p in (path, *path.parents)) or any(
+        re.search(r"(?:^|\.)env(?:\.|$)", p) for p in path.parts
+    ):
+        raise ValueError("Refusing sensitive or symlink input")
+    return path.read_text(encoding="utf-8")
 
 
-def evaluate(global_rules, agent_rules, policies, action, resource):
-    effect = "ask"
-    for rule in [*global_rules, *agent_rules]:
-        if matches(rule["action"], action) and matches(
-            rule["resource"], resource, shell=action == "shell"
-        ):
-            effect = rule["effect"]
-    policy_effect = None
-    for rule in policies:
-        if (rule["action"] == "permission" and matches(
-                rule["resource"], f"{action}:{resource}", shell=action == "shell")):
-            policy_effect = rule["effect"]
-    return "deny" if policy_effect == "deny" else effect
-
-
-def load_contracts(config_path, agents_path):
-    def read(path):
-        if path.is_symlink() or re.search(r"(?:^|\.)env(?:\.|$)", path.name):
-            raise ValueError(f"Refusing sensitive or symlink input: {path}")
-        try:
-            return path.read_text(encoding="utf-8")
-        except (OSError, UnicodeError):
-            raise ValueError(f"Cannot read input: {path}") from None
-
-    try:
-        raw = json.loads(read(config_path))
-    except json.JSONDecodeError:
-        raise ValueError(f"Invalid JSON: {config_path}") from None
-    if not isinstance(raw, dict):
-        raise ValueError(f"Expected JSON object: {config_path}")
-    config = {key: raw.get(key) for key in
-              ("permissions", "agents", "default_agent", "subagent_depth", "experimental")}
-    agents, sources = {}, {}
-    inline = config["agents"] or {}
-    if not isinstance(inline, dict):
-        raise ValueError(f"Expected agents object: {config_path}")
-    for name, data in inline.items():
-        agents[name] = data
-        sources[name] = f"{config_path} agent={name}"
-    if not agents_path.is_dir():
-        raise ValueError(f"Missing agents directory: {agents_path}")
-    for path in sorted(agents_path.rglob("*.md")):
-        text = read(path)
-        front = re.match(r"\A---\r?\n(.*?)\r?\n---(?:\r?\n|$)", text, re.DOTALL)
+def load_agents(root):
+    agents, bodies = {}, {}
+    for path in sorted(root.rglob("*.md")):
+        text = read_safe(path)
+        front = re.match(r"\A---\n(.*?)\n---(?:\n|$)", text, re.S)
         if not front:
-            raise ValueError(f"Missing YAML frontmatter: {path}")
-        try:
-            data = yaml.safe_load(front.group(1))
-        except yaml.YAMLError:
-            raise ValueError(f"Invalid YAML frontmatter: {path}") from None
+            raise ValueError("Missing agent/document frontmatter")
+        data = yaml.safe_load(front[1])
         if not isinstance(data, dict):
-            raise ValueError(f"Expected frontmatter object: {path}")
-        name = path.relative_to(agents_path).with_suffix("").as_posix()
-        previous = agents.get(name, {})
-        if not isinstance(previous, dict):
-            raise ValueError(f"Invalid inline agent: {sources[name]}")
-        agents[name] = {**previous, **data}
-        if "permissions" in previous and "permissions" in data:
-            agents[name]["permissions"] = previous["permissions"] + data["permissions"]
-        sources[name] = f"{path} agent={name}"
-    agents = {name: data for name, data in agents.items()
-              if not isinstance(data, dict) or not data.get("disabled", False)}
-    return config, agents, sources
+            raise ValueError("Invalid frontmatter object")
+        if data.get("disabled"):
+            continue
+        name = path.relative_to(root).with_suffix("").as_posix()
+        agents[name], bodies[name] = data, text[front.end() :]
+    return agents, bodies
+
+
+def has_rule(data, action, resource, effect):
+    return {"action": action, "resource": resource, "effect": effect} in data.get(
+        "permissions", []
+    )
+
+
+def matches(value, pattern):
+    expression = (
+        re.escape(pattern.replace("\\", "/"))
+        .replace(r"\ ", " ")
+        .replace(r"\*", ".*")
+        .replace(r"\?", ".")
+    )
+    if expression.endswith(" .*"):
+        expression = expression[:-3] + "( .*)?"
+    return re.fullmatch(expression, value.replace("\\", "/"), re.S) is not None
+
+
+def effect(action, resource, *rulesets):
+    result = "ask"
+    for rules in rulesets:
+        for rule in rules:
+            if matches(action, rule["action"]) and matches(resource, rule["resource"]):
+                result = rule["effect"]
+    return result
 
 
 class ConfigContracts(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.config, cls.agents, cls.sources = load_contracts(CONFIG, AGENTS)
-        cls.global_rules = cls.config["permissions"] or []
-        cls.policies = (cls.config["experimental"] or {}).get("policies", [])
+        cls.config = json.loads(read_safe(CONFIG))
+        cls.agents, cls.bodies = load_agents(AGENTS)
 
-    def access(self, name, action, resource):
-        return evaluate(self.global_rules, self.agents[name].get("permissions", []),
-                        self.policies, action, resource)
+    def rules(self, name):
+        # Pinned defaults/built-ins precede global JSON, then global Markdown.
+        # Plan's runtime-directory edit exception is outside these shell probes.
+        # Project overrides need their own later entries.
+        defaults = [
+            {"action": "*", "resource": "*", "effect": "allow"},
+            {"action": "read", "resource": "*.env", "effect": "ask"},
+            {"action": "read", "resource": "*.env.*", "effect": "ask"},
+            {"action": "read", "resource": "*.env.example", "effect": "allow"},
+        ]
+        builtin = [{"action": "question", "resource": "*", "effect": "allow"}]
+        if name == "plan":
+            builtin.append({"action": "edit", "resource": "*", "effect": "deny"})
+        return [
+            defaults,
+            builtin if name in {"build", "plan"} else [],
+            self.config.get("permissions", []),
+            self.config.get("agents", {}).get(name, {}).get("permissions", []),
+            self.agents.get(name, {}).get("permissions", []),
+        ]
 
-    def expect(self, name, action, resource, effect):
-        with self.subTest(source=self.sources[name], action=action, resource=resource):
-            self.assertEqual(self.access(name, action, resource), effect)
+    def expect(self, name, action, resource, expected):
+        with self.subTest(agent=name, action=action, resource=resource):
+            self.assertEqual(effect(action, resource, *self.rules(name)), expected)
 
-    def test_permission_shapes(self):
-        groups = [(str(CONFIG), self.global_rules),
-                  (f"{CONFIG} experimental.policies", self.policies)]
-        groups += [(self.sources[name], data.get("permissions", []))
-                   for name, data in self.agents.items() if isinstance(data, dict)]
-        for source, rules in groups:
-            with self.subTest(source=source):
-                self.assertIsInstance(rules, list, "Expected ordered permission array")
-                for index, rule in enumerate(rules):
-                    with self.subTest(rule=index):
-                        self.assertTrue(isinstance(rule, dict), "Expected permission object")
-                        self.assertTrue(all(isinstance(rule.get(key), str) and rule[key]
-                                            for key in ("action", "resource", "effect")),
-                                        "Permission needs action/resource/effect strings")
-                        self.assertTrue(rule["effect"] in {"allow", "ask", "deny"},
-                                        "Unsupported permission effect")
+    def test_effective_ordered_boundaries(self):
+        for name in self.agents:
+            if name not in PRIMARIES:
+                for child in self.agents:
+                    self.expect(name, "subagent", child, "deny")
+            if name not in ADAPTERS:
+                for tool in ("switchboard_delegate", "switchboard_harnesses"):
+                    self.expect(name, tool, "*", "deny")
+            if name in ("direct", "autopilot"):
+                for child in ADAPTERS:
+                    self.expect(name, "subagent", child, "deny")
+        for name in ("review", "adversarial", "operations", "tutor"):
+            self.expect(name, "edit", "src/main.py", "deny")
+        for name in (
+            "direct",
+            "autopilot",
+            "coder",
+            "utility",
+            "operations",
+            "config",
+            "github",
+            "cloudflare",
+            "gated-direct",
+            "plan",
+            "build",
+        ):
+            for command in (
+                "sudo ls",
+                "git reset --hard HEAD",
+                "git push --force origin",
+                "git push -f origin",
+            ):
+                self.expect(name, "shell", command, "deny")
+        for command in (
+            "rm -rf /tmp/opencode/work/../outside",
+            "rm -rf /tmp/opencode/work /outside",
+        ):
+            self.expect("coder", "shell", command, "ask")
+            self.assertEqual(
+                effect("shell", command, self.config.get("permissions", [])), "ask"
+            )
+        self.expect("plan", "shell", "uv run pytest tests", "ask")
+        self.expect("review", "shell", "pnpm test", "allow")
+        self.expect("direct", "execute", "*", "allow")
 
-    def test_agent_shapes_and_children(self):
-        for name, data in self.agents.items():
-            with self.subTest(source=self.sources[name]):
-                self.assertTrue(isinstance(data, dict), "Expected agent object")
-                self.assertTrue(data.get("mode", "primary") in {"primary", "subagent", "all"},
-                                "Unsupported agent mode")
+    def test_effective_models_and_wildcards(self):
+        self.assertTrue(matches("pnpm test", "pnpm test *"))
+        self.assertTrue(matches("a/b", r"a\?"))
+        self.assertEqual(
+            effect(
+                "edit", "file", [{"action": "*", "resource": "*", "effect": "allow"}]
+            ),
+            "allow",
+        )
+
+        def provider(model):
+            return (
+                model.split("/", 1)[0]
+                if isinstance(model, str)
+                else model.get("providerID", "")
+            )
+
+        self.assertNotIn("anthropic", str(self.config.get("model", "")).lower())
+        self.assertNotIn("claude", str(self.config.get("model", "")).lower())
+        self.assertTrue(
+            "anthropic" not in self.config.get("providers", {}),
+            "Native Anthropic provider configured",
+        )
+        for data in self.config.get("providers", {}).values():
+            for name, model in data.get("models", {}).items():
+                self.assertNotRegex(name.lower(), "anthropic|claude")
+                self.assertNotRegex(
+                    str(model.get("modelID", "")).lower(), "anthropic|claude"
+                )
+        for name in self.agents.keys() | self.config.get("agents", {}).keys():
+            inline = self.config.get("agents", {}).get(name, {})
+            self.assertNotRegex(
+                str(inline.get("model", "")).lower(), "anthropic|claude", name
+            )
+            selected = self.agents.get(name, {}).get(
+                "model", inline.get("model", self.config.get("model", ""))
+            )
+            self.assertNotEqual(provider(selected), "anthropic", name)
+            self.assertNotRegex(str(selected).lower(), "anthropic|claude", name)
+        for name, model in (
+            ("direct", "openai/gpt-6.1-sol#xhigh"),
+            ("coder", "openai/gpt-6.1-sol#high"),
+            ("cloudflare", "openai/gpt-6.1-sol#high"),
+        ):
+            self.assertEqual(self.agents[name]["model"], model)
+
+    def test_explicit_adapter_commands(self):
+        optional = json.loads(read_safe(AGENTS / "examples/switchboard.json"))
+        self.assertEqual(set(optional), {"commands"})
+        self.assertEqual(set(optional["commands"]), ADAPTERS)
+        for name, command in optional["commands"].items():
+            self.assertEqual(command["agent"], name)
+            self.assertIs(command["subagent"], True)
+            self.assertEqual(command["template"], "$ARGUMENTS")
+            self.assertEqual(self.agents[name]["mode"], "subagent")
+            selected = command.get("model", self.agents[name]["model"])
+            self.assertEqual(selected, "openai/gpt-6-luna#high")
+            for parent in ("direct", "autopilot"):
+                self.expect(parent, "subagent", name, "deny")
+
+    def test_native_shapes(self):
+        self.assertIsInstance(self.config, dict)
+        self.assertFalse(set(self.config) - CONFIG_FIELDS, "Unsupported config fields")
+        experimental = self.config.get("experimental", {})
+        self.assertFalse(
+            set(experimental) - {"subagent_depth", "policies", "portable_shell_scanner"}
+        )
+        policies = experimental.get("policies", [])
+        for policy in policies:
+            self.assertIn(
+                policy["action"], {"provider.use", "tool.use", "integration.use"}
+            )
+            self.assertIn(policy["effect"], {"allow", "deny"})
+        groups = [self.config.get("permissions", []), policies]
+        for name, data in {**self.agents, **self.config.get("agents", {})}.items():
+            with self.subTest(agent=name):
+                self.assertFalse(set(data) - FIELDS, "Unsupported agent fields")
+                self.assertIn(
+                    data.get("mode", "primary"), {"primary", "subagent", "all"}
+                )
                 if "model" in data:
                     model = data["model"]
-                    string_model = isinstance(model, str) and re.fullmatch(
-                        r"[^/\s#]+/[^/\s#]+(?:#[^/\s#]+)?", model)
-                    expanded_model = isinstance(model, dict) and all(
-                        isinstance(model.get(key), str) and model[key]
-                        for key in ("providerID", "model")) and (
-                        "variant" not in model or
-                        isinstance(model["variant"], str) and bool(model["variant"]))
-                    self.assertTrue(string_model or expanded_model,
-                                    "Expected provider/model[#variant] or expanded model object")
-                self.assertTrue("reasoningEffort" not in data, "Use model #variant instead")
-                for rule in data.get("permissions", []):
-                    if rule["action"] == "subagent" and rule["effect"] == "allow":
-                        child = rule["resource"]
-                        if "*" in child or "?" in child:
-                            continue
-                        self.assertTrue(child in self.agents, f"Unknown child agent ID: {child}")
-                        self.assertTrue(self.agents[child].get("mode", "primary")
-                                        in {"subagent", "all"}, f"Child not callable: {child}")
+                    if isinstance(model, str):
+                        self.assertRegex(model, r"^[^/\s#]+/[^\s#]+(?:#[^\s#]+)?$")
+                    else:
+                        self.assertIsInstance(model, dict)
+                        self.assertFalse(
+                            set(model) - {"providerID", "model", "variant"}
+                        )
+                        for field in ("providerID", "model"):
+                            self.assertIsInstance(model.get(field), str)
+                if "steps" in data:
+                    self.assertTrue(type(data["steps"]) is int and data["steps"] > 0)
+                groups.append(data.get("permissions", []))
+        for rules in groups:
+            self.assertIsInstance(rules, list)
+            for rule in rules:
+                self.assertEqual(set(rule), {"action", "resource", "effect"})
+                self.assertTrue(all(isinstance(v, str) and v for v in rule.values()))
+                self.assertIn(rule["effect"], {"allow", "ask", "deny"})
 
-    def test_default_and_topology(self):
-        with self.subTest(source=str(CONFIG)):
-            name = self.config["default_agent"]
-            self.assertTrue(isinstance(name, str) and name in self.agents,
-                            "Default agent must exist")
-            self.assertFalse(self.agents[name].get("hidden", False), "Default must be visible")
-            self.assertTrue(self.agents[name].get("mode", "primary") in {"primary", "all"},
-                            "Default must be primary-capable")
-            self.assertEqual(self.config["subagent_depth"], 3)
-        for parent, child in (("orchestrator", "claude"), ("orchestrator", "code"),
-                              ("autopilot", "claude"), ("autopilot", "code"),
-                              ("code", "qwen-task")):
-            self.expect(parent, "subagent", child, "allow")
-        self.expect("orchestrator", "subagent", "autopilot", "deny")
-        for parent in ("orchestrator", "autopilot", "direct"):
-            self.expect(parent, "subagent", "adversarial", "allow")
+    def test_inventory_and_defaults(self):
+        self.assertEqual(set(self.agents), PRIMARIES | LEAVES)
+        self.assertFalse(RETIRED & set(self.config.get("agents", {})))
+        self.assertEqual(self.config.get("default_agent"), "direct")
+        self.assertEqual(self.agents["direct"]["mode"], "all")
+        self.assertEqual(self.agents["direct"]["model"], "openai/gpt-6.1-sol#xhigh")
+        self.assertEqual(self.agents["autopilot"]["mode"], "primary")
+        self.assertEqual(self.agents["coder"]["model"], "openai/gpt-6.1-sol#high")
+        self.assertEqual(self.agents["cloudflare"]["model"], "openai/gpt-6.1-sol#high")
+        self.assertEqual(self.agents["cloudflare"]["mode"], "all")
 
-    def test_secret_hard_denials_survive_broad_allows(self):
-        permissive = [{"action": "*", "resource": "*", "effect": "allow"}]
-        probes = [("read", path) for path in (
-            ".env", "nested/.env", ".env.local", ".env.example", "app.env",
-            "/path/.env.backup")]
-        probes += [("shell", "cat .env"), ("shell", "cat .env.production")]
-        for action, resource in probes:
-            with self.subTest(source=str(CONFIG), action=action, resource=resource):
-                self.assertEqual(evaluate(self.global_rules + permissive, permissive,
-                                          self.policies, action, resource), "deny")
-            for name in self.agents:
-                self.expect(name, action, resource, "deny")
-        for name in ("direct", "autopilot", "code", "review"):
-            self.expect(name, "read", "src/main.py", "allow")
-            self.expect(name, "shell", "uv run pytest tests/test_config.py", "allow")
-
-    def test_skill_and_specialist_routing(self):
-        self.assertTrue("config" in self.agents, "Missing config agent")
-        for name in self.agents:
-            self.expect(name, "skill", "customize-opencode",
-                        "allow" if name == "config" else "deny")
+    def test_flat_routes_and_depth(self):
+        self.assertTrue(
+            "subagent_depth" not in self.config, "Unsupported top-level depth"
+        )
+        self.assertEqual(self.config.get("experimental", {}).get("subagent_depth"), 1)
+        for name, data in self.agents.items():
+            routes = [r for r in data["permissions"] if r["action"] == "subagent"]
+            with self.subTest(agent=name):
+                if name in LEAVES:
+                    self.assertEqual(
+                        routes,
+                        [{"action": "subagent", "resource": "*", "effect": "deny"}],
+                    )
+                for r in routes:
+                    if r["effect"] != "deny":
+                        self.assertIn(r["resource"], LEAVES)
+                        self.assertNotIn(r["resource"], ADAPTERS)
+                        self.assertIn(
+                            self.agents[r["resource"]]["mode"], {"all", "subagent"}
+                        )
+        for name, data in self.config.get("agents", {}).items():
+            for r in data.get("permissions", []):
+                if r["action"] == "subagent" and r["effect"] != "deny":
+                    self.assertIn(name, PRIMARIES)
+                    self.assertIn(r["resource"], LEAVES - ADAPTERS)
+        expected = {
+            "coder",
+            "review",
+            "adversarial",
+            "operations",
+            "utility",
+            "config",
+            "github",
+            "cloudflare",
+        }
         for name in ("direct", "autopilot"):
-            for child in ("config", "github", "cloudflare-expert"):
-                self.expect(name, "subagent", child, "allow")
+            self.assertEqual(
+                {
+                    r["resource"]
+                    for r in self.agents[name]["permissions"]
+                    if r["action"] == "subagent" and r["effect"] == "allow"
+                },
+                expected,
+            )
 
-    def test_review_commands_and_read_only_boundary(self):
-        for command in ("uv run pytest", "uv run python -m pytest",
-                        "uv run python3 -m pytest", "pnpm test", "pnpm run test",
-                        "pnpm run lint", "pnpm run typecheck"):
-            for suffix in ("", " tests"):
-                self.expect("review", "shell", command + suffix, "allow")
-        for command in ("npm test", "npm run test", "yarn test", "pytest", "pytest tests"):
-            self.expect("review", "shell", command, "deny")
-        for reviewer in ("review", "adversarial"):
-            self.expect(reviewer, "edit", "src/main.py", "deny")
-            for child in self.agents:
-                self.expect(reviewer, "subagent", child, "deny")
+    def test_boundaries(self):
+        for name, data in self.agents.items():
+            self.assertEqual(
+                data["permissions"][0],
+                {"action": "*", "resource": "*", "effect": "deny"},
+                name,
+            )
+        for name in ("review", "adversarial"):
+            for command in ("uv run pytest", "pnpm test"):
+                self.expect(name, "shell", command, "allow")
+            self.expect(name, "shell", "npm test", "deny")
+        self.expect("github", "github_create_pull_request", "*", "allow")
+        self.expect("cloudflare", "cloudflare-api_request", "*", "allow")
+        for name in ("coder", "utility", "operations"):
+            for command in ("git commit -m synthetic", "git push origin"):
+                self.expect(name, "shell", command, "deny")
+        self.expect("gated-direct", "shell", "uv run pytest", "ask")
+        self.expect(
+            "gated-direct", "external_directory", "/synthetic/reference/*", "ask"
+        )
+        self.expect("contained-code-local", "webfetch", "https://example.com", "deny")
+        for name in ("contained-net-research", "contained-text-only"):
+            for action in ("read", "edit", "shell"):
+                self.expect(name, action, "synthetic", "deny")
+        for name in self.agents:
+            self.expect(
+                name,
+                "skill",
+                "customize-opencode",
+                "allow" if name == "config" else "deny",
+            )
+        policies = self.config.get("experimental", {}).get("policies", [])
+        # Pinned policy hook selects the last tool.use match; allow lifts a deny.
+        for resources in (
+            ("read:.env", "read:/synthetic/.env", "read:/synthetic/config.env"),
+            (
+                "read:/synthetic/.env.example",
+                "read:/synthetic/.env.backup",
+                "read:/synthetic/.env.local.bak",
+            ),
+            (
+                "shell:cat /synthetic/.env",
+                "shell:cat /synthetic/.env.example",
+                "shell:printf .env.backup",
+            ),
+        ):
+            for resource in resources:
+                selected = next(
+                    (
+                        p
+                        for p in reversed(policies)
+                        if p["action"] == "tool.use"
+                        and matches(resource, p["resource"])
+                    ),
+                    {},
+                )
+                self.assertEqual(selected.get("effect"), "deny", resource)
 
-    def test_evaluator_order_and_wildcards(self):
-        self.assertTrue(matches("a?*", "abc/def"))
-        self.assertFalse(matches("a?", "abc"))
-        self.assertFalse(matches("cat", "cat file"))
-        self.assertTrue(matches("pnpm test *", "pnpm test", shell=True))
-        self.assertFalse(matches("pnpm test *", "pnpm test"))
-        deny = {"action": "read", "resource": "*", "effect": "deny"}
-        allow = {"action": "read", "resource": "src/*", "effect": "allow"}
-        self.assertEqual(evaluate([deny], [allow], [], "read", "src/main.py"), "allow")
-        self.assertEqual(evaluate([allow], [deny], [], "read", "src/main.py"), "deny")
+    def test_model_independence_and_adapter_isolation(self):
+        for name, data in self.config.get("agents", {}).items():
+            if name in self.agents:
+                self.assertNotIn("anthropic", str(data.get("model", "")).lower())
+                self.assertFalse(data.get("disabled", False), "Managed role disabled")
+                if name not in ADAPTERS:
+                    self.assertFalse(
+                        any(
+                            r["effect"] == "allow"
+                            and "switchboard" in r["action"].lower()
+                            for r in data.get("permissions", [])
+                        )
+                    )
+                if name in LEAVES:
+                    for rule in data.get("permissions", []):
+                        self.assertFalse(
+                            rule["action"] == "*" and rule["effect"] != "deny"
+                        )
+                        self.assertFalse(
+                            rule["action"] == "subagent" and rule["effect"] != "deny"
+                        )
+                if name in {"review", "adversarial", "operations"}:
+                    self.assertFalse(
+                        any(
+                            r["action"] == "edit" and r["effect"] != "deny"
+                            for r in data.get("permissions", [])
+                        )
+                    )
+        for name, data in self.agents.items():
+            with self.subTest(agent=name):
+                self.assertNotIn("anthropic", str(data.get("model", "")).lower())
+                if name not in ADAPTERS:
+                    self.assertNotRegex(
+                        self.bodies[name].lower(),
+                        r"claude|anthropic|switchboard|externalmodel|externaleffort",
+                    )
+                    self.assertFalse(
+                        any(
+                            r["effect"] == "allow"
+                            and "switchboard" in r["action"].lower()
+                            for r in data["permissions"]
+                        )
+                    )
+        for name in ADAPTERS:
+            self.assertTrue(has_rule(self.agents[name], "execute", "*", "allow"))
+            self.assertFalse(has_rule(self.agents[name], "shell", "*", "allow"))
+        self.assertTrue(has_rule(self.agents["direct"], "execute", "*", "allow"))
+        for name in self.agents.keys() - ADAPTERS - {"direct"}:
+            self.assertFalse(has_rule(self.agents[name], "execute", "*", "allow"), name)
 
-    def test_policy_order_preserves_underlying_permissions(self):
-        deny = {"action": "permission", "resource": "shell:pnpm test *", "effect": "deny"}
-        allow = {**deny, "effect": "allow"}
-        for effect in ("ask", "deny", "allow"):
-            with self.subTest(underlying=effect):
-                rules = [{"action": "shell", "resource": "*", "effect": effect}]
-                self.assertEqual(evaluate(rules, [], [deny, allow], "shell", "pnpm test"), effect)
-                self.assertEqual(evaluate(rules, [], [allow, deny], "shell", "pnpm test"), "deny")
+    def test_current_examples_and_removed_references(self):
+        example = json.loads(read_safe(AGENTS / "examples/workstreams.json"))
+        self.assertNotIn("subagent_depth", example)
+        self.assertEqual(example["experimental"]["subagent_depth"], 1)
+        self.assertEqual(example["commands"]["program"]["agent"], "autopilot")
+        self.assertIs(example["commands"]["program"]["subagent"], False)
+        for command in self.config.get("commands", {}).values():
+            if "agent" in command:
+                self.assertIn(command["agent"], self.agents)
+        for name, body in self.bodies.items():
+            self.assertNotRegex(
+                body,
+                r"`(?:code|orchestrator|ops-fast|ops-context|qwen-task|yolo)`",
+                name,
+            )
+        for name in self.agents:
+            self.assertNotIn(name, RETIRED)
+        for path in sorted(AGENTS.rglob("*.md")):
+            for line in read_safe(path).splitlines():
+                if PREVIOUS_CLOUDFLARE in line:
+                    self.assertEqual(path.relative_to(AGENTS).as_posix(), "README.md")
+                    self.assertTrue(
+                        line.startswith(f"| {PREVIOUS_CLOUDFLARE} | cloudflare |"),
+                        "Previous specialist ID permitted only in migration mapping",
+                    )
+        for path in sorted(AGENTS.rglob("*.json")):
+            self.assertTrue(
+                PREVIOUS_CLOUDFLARE not in read_safe(path),
+                "Stale specialist ID in current config/example",
+            )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", type=Path, default=Path.home() / ".config/opencode/opencode.json")
-    parser.add_argument("--agents", type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument(
+        "--config", type=Path, default=ROOT / "tests/fixtures/config.json"
+    )
+    parser.add_argument("--agents", type=Path, default=ROOT)
     args = parser.parse_args()
     CONFIG, AGENTS = args.config.expanduser(), args.agents.expanduser()
-    unittest.main(argv=[__file__], verbosity=1)
+    unittest.main(argv=[__file__], verbosity=2)

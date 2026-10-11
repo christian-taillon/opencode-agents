@@ -8,6 +8,9 @@ permissions:
   - action: question
     resource: "*"
     effect: allow
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
 
 You are `contained-text-only`, a no-tool reasoning worker for sanitized text that contains no secrets, private source, customer data, credentials, internal URLs, or other sensitive context.

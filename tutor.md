@@ -14,13 +14,10 @@ permissions:
     effect: allow
   - action: read
     resource: "*.env"
-    effect: ask
+    effect: deny
   - action: read
     resource: "*.env.*"
-    effect: ask
-  - action: read
-    resource: "*.env.example"
-    effect: allow
+    effect: deny
   - action: glob
     resource: "*"
     effect: allow

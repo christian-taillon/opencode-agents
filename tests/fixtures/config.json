@@ -1,0 +1,33 @@
+{
+  "default_agent": "direct",
+  "model": "openai/gpt-6-luna",
+  "providers": {"openai": {}, "ollama": {}},
+  "agents": {
+    "build": {"mode": "primary", "model": "openai/gpt-6.1-sol#high"},
+    "plan": {"mode": "primary", "permissions": [
+      {"action": "shell", "resource": "*", "effect": "ask"},
+      {"action": "shell", "resource": "git push --force*", "effect": "deny"},
+      {"action": "shell", "resource": "git push -f *", "effect": "deny"},
+      {"action": "shell", "resource": "git reset --hard*", "effect": "deny"},
+      {"action": "shell", "resource": "sudo *", "effect": "deny"}
+    ]}
+  },
+  "experimental": {
+    "subagent_depth": 1,
+    "policies": [
+      {"action": "tool.use", "resource": "read:*.env", "effect": "deny"},
+      {"action": "tool.use", "resource": "read:*.env.*", "effect": "deny"},
+      {"action": "tool.use", "resource": "shell:*.env*", "effect": "deny"}
+    ]
+  },
+  "permissions": [
+    {"action": "shell", "resource": "*", "effect": "allow"},
+    {"action": "shell", "resource": "git push --force*", "effect": "deny"},
+    {"action": "shell", "resource": "git push -f *", "effect": "deny"},
+    {"action": "shell", "resource": "git reset --hard*", "effect": "deny"},
+    {"action": "shell", "resource": "sudo *", "effect": "deny"},
+    {"action": "skill", "resource": "customize-opencode", "effect": "deny"},
+    {"action": "shell", "resource": "rm -rf *", "effect": "ask"},
+    {"action": "shell", "resource": "rm -fr *", "effect": "ask"}
+  ]
+}

@@ -9,9 +9,6 @@ permissions:
   - action: "external_directory"
     resource: "*"
     effect: ask
-  - action: "external_directory"
-    resource: "/tmp/opencode/telltale-doc-cleanup/*"
-    effect: allow
   - action: "read"
     resource: "*"
     effect: allow
@@ -38,6 +35,9 @@ permissions:
     effect: allow
   - action: "shell"
     resource: "git push --force*"
+    effect: deny
+  - action: shell
+    resource: "git push -f *"
     effect: deny
   - action: "shell"
     resource: "git reset --hard*"
