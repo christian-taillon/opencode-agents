@@ -90,10 +90,11 @@ boundaries, and failure handling. Their OpenCode model changes only the wrapper;
 are integration calls, not additional OpenCode delegation hops, and do not inherit
 OpenCode permission enforcement. Never copy external vendor configuration here.
 
-After installing the plugin and both wrapper files, separately merge the tiny
-[optional command fragment](examples/switchboard.json) to enable `/claude` and
-`/antigravity`. These explicit user commands create native background children,
-using each wrapper's configured Luna High model. They are separate from `/program`.
+After installing the plugin and selected wrapper files, configure any
+`/claude` or `/antigravity` commands in your global OpenCode configuration
+with their matching `agent` and `subagent: true`. These explicit user commands
+create native background children using each wrapper's configured Luna High
+model; they are separate from `/program`.
 `direct` also permits one terminal `claude` child when the user explicitly requests
 it, for example `Use @claude for this task`. The named permission enables the route;
 the `direct` prompt restricts it to explicit requests, never automatic routing or
@@ -125,12 +126,13 @@ V2.0.26's installed schema and runner support:
 Top-level `subagent_depth` is unsupported in that version. The runner counts the
 calling session's ancestors: primary depth `0` may launch a leaf; leaf depth `1`
 cannot launch again. Verify against the installed version on upgrades, rather
-than assuming the public schema is V2. [Example](examples/workstreams.json)
-contains the flat `/program` command and optional output/compaction settings.
-The command explicitly sets `subagent: false` to stay in the current session,
-with its existing Sol High model selection. Native child sessionIDs, relevant
-skills, compaction, and Git worktrees supply continuity and isolation; no custom
-scheduler, shared instruction framework, or new plugin is required.
+than assuming the public schema is V2. Configure `/program` with
+`agent: autopilot`, `subagent: false`, and an explicit Sol High model
+selection to stay in the current session. Keep compaction and tool-output
+policy in the global OpenCode configuration rather than copying examples.
+Native child sessionIDs, relevant skills, compaction, and Git worktrees
+supply continuity and isolation; no custom scheduler, shared instruction
+framework, or new plugin is required.
 
 Global permission rules precede agent rules; last matching rule wins. Children
 use their own permissions; parent rules select callable IDs. Keep destructive

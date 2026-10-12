@@ -37,16 +37,16 @@ review or a new outcome. Evidence, not a verdict, drives acceptance.
 
 ## Configuration and command
 
-Merge only the settings needed from [the example](../examples/workstreams.json).
-V2.0.26 uses `experimental.subagent_depth: 1`, not a top-level field. Primary depth
+Set `experimental.subagent_depth: 1` in the global OpenCode configuration.
+V2.0.26 uses this nested setting, not a top-level field. Primary depth
 `0` may call a leaf; leaf depth `1` is blocked. Its own `subagent: * -> deny` rules
 also forbid grandchildren, including when a leaf is selected directly.
 
 `/program` selects `autopilot` with explicit `subagent: false`, forcing the current
 session instead of a background child manager. Its explicit command model selects
 Sol High; primary selection by ID alone would retain the session's stored model.
-Migrate any installed Markdown command still
-selecting a retired role; file-based overrides can outrank the JSON example.
+Migrate any installed Markdown command still selecting a retired role;
+file-based overrides can outrank the global JSON configuration.
 Keep model selection separate from role selection and honor explicit overrides.
 
 ## Recovery

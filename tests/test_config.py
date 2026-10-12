@@ -268,17 +268,10 @@ class ConfigContracts(unittest.TestCase):
         ):
             self.assertEqual(self.agents[name]["model"], model)
 
-    def test_explicit_adapter_commands(self):
-        optional = json.loads(read_safe(AGENTS / "examples/switchboard.json"))
-        self.assertEqual(set(optional), {"commands"})
-        self.assertEqual(set(optional["commands"]), ADAPTERS)
-        for name, command in optional["commands"].items():
-            self.assertEqual(command["agent"], name)
-            self.assertIs(command["subagent"], True)
-            self.assertEqual(command["template"], "$ARGUMENTS")
+    def test_explicit_adapter_roles(self):
+        for name in ADAPTERS:
             self.assertEqual(self.agents[name]["mode"], "subagent")
-            selected = command.get("model", self.agents[name]["model"])
-            self.assertEqual(selected, "openai/gpt-6-luna#high")
+            self.assertEqual(self.agents[name]["model"], "openai/gpt-6-luna#high")
 
     def test_explicit_claude_request_route(self):
         self.expect("direct", "subagent", "claude", "allow")
@@ -521,12 +514,7 @@ class ConfigContracts(unittest.TestCase):
         for name in self.agents.keys() - ADAPTERS - {"direct"}:
             self.assertFalse(has_rule(self.agents[name], "execute", "*", "allow"), name)
 
-    def test_current_examples_and_removed_references(self):
-        example = json.loads(read_safe(AGENTS / "examples/workstreams.json"))
-        self.assertNotIn("subagent_depth", example)
-        self.assertEqual(example["experimental"]["subagent_depth"], 1)
-        self.assertEqual(example["commands"]["program"]["agent"], "autopilot")
-        self.assertIs(example["commands"]["program"]["subagent"], False)
+    def test_removed_references(self):
         for command in self.config.get("commands", {}).values():
             if "agent" in command:
                 self.assertIn(command["agent"], self.agents)
@@ -549,7 +537,7 @@ class ConfigContracts(unittest.TestCase):
         for path in sorted(AGENTS.rglob("*.json")):
             self.assertTrue(
                 PREVIOUS_CLOUDFLARE not in read_safe(path),
-                "Stale specialist ID in current config/example",
+                "Stale specialist ID in current configuration",
             )
 
 
