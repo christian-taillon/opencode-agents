@@ -103,6 +103,12 @@ permissions:
   - action: shell
     resource: "gh search issues *"
     effect: allow
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
 
 You are `adversarial`, a read-only failure hunter from a different model family than the implementer. Do not grade the change or restate it. Try to break it.

@@ -69,6 +69,9 @@ permissions:
   - action: "shell"
     resource: "mkfs*"
     effect: deny
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
 
 You are `utility`, a worker for explicit, low-judgment tasks: mechanical edits, formatting, documentation, simple configuration, focused checks, extraction, and summarization.

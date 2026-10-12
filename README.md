@@ -4,87 +4,220 @@ disabled: true
 
 # opencode-agents
 
-Opinionated agent definitions for OpenCode 2, tuned for code quality over token economy.
+Generic OpenCode 2 roles, optimized for correct, maintainable work before cost.
 
-Copy the agents you want into `~/.config/opencode/agents/` or a project's `.opencode/agents/`, then review their models and permissions.
-
-The flat layout is deliberate: OpenCode 2 derives agent IDs from paths, so moving `review.md` to `specialists/review.md` renames `review` to `specialists/review`. Markdown documentation under the agent tree uses `disabled: true` so it is not selectable.
-
-## Companion: Switchboard
-
-[OpenCode Switchboard](https://github.com/christian-taillon/opencode-switchboard) provides the plugin execution/session contract and standalone wrapper templates for external harness subagents. This repository provides opinionated parent routing and customized agent definitions, including `claude` and `antigravity`.
-
-Install the backend using [Switchboard's installation instructions](https://github.com/christian-taillon/opencode-switchboard#install); its [optional native profiles](https://github.com/christian-taillon/opencode-switchboard#optional-native-subagent-profiles) are standalone alternatives to these customized wrappers. See its [delegation contract](https://github.com/christian-taillon/opencode-switchboard/blob/main/skills/switchboard/SKILL.md) for task and session handling.
-
-The repositories are installed and updated separately; neither automatically synchronizes the other. Generic Switchboard use does not require this agent collection or its routing policy.
-
-## Design
-
-Three ideas drive the routing:
-
-1. **The engineer who changes code runs its tests.** Raw failures are the most valuable signal in a coding loop; summaries lose it. Owners run their own checks and hand only very long or noisy runs to `ops-context`, keeping the diagnosis.
-2. **Claude Code is the primary coder and planner.** Substantive work goes to `claude` (Opus 5.5): plan in `plan` mode, check the plan, then resume the same session in `full` mode to implement. Routine, well-specified work stays on GPT-6.1 Sol High (`direct` or `code`).
-3. **Review crosses model families.** A different family catches different defects. Claude-authored changes are reviewed by `review` (Sol High); OpenAI- or Gemini-authored changes by `claude` in `plan` mode with Opus 5.5. `adversarial` (Grok 4.7) adds failure hunting for high-consequence changes.
-
-Keep topology shallow. Every handoff loses context, so a child must buy isolation, independence, a specialist boundary, or real parallelism.
-
-## Primary workflows
-
-| Agent | Model | Use it when |
-| --- | --- | --- |
-| `autopilot` | Sol High | Default. One outcome: plan, route to `claude` or `code`, review, accept |
-| `direct` | Sol High | Routine engineering, or when this conversation's context matters most; does the work itself |
-| `orchestrator` | Sol High | A multi-tranche workstream (`/program`): sequences tranches to `claude`/`code`, reviews, keeps a checkpoint |
-| `gated-direct` | Sol High | Human approval before host commands or access outside the project |
-| `contained` | Sol Medium | Separate trust boundaries for local code, network research, and text-only reasoning |
-| `tutor` | Luna High | Socratic teaching without implementing |
-| `yolo` | Sol High | Manual-only high-authority direct implementation |
+## Flat design
 
 ```text
-autopilot / orchestrator
-  +-- claude  (Claude Code via Switchboard; Opus 5.5)  substantive plan + implement
-  +-- code    (Sol High)                               routine implementation
-  +-- review  (Sol High) | claude plan-mode (Opus)     cross-family review
-  +-- adversarial (Grok 4.7)                           failure hunting
-  +-- ops-context / ops-fast / qwen-task / utility     long runs, quick checks, mechanical edits
-  `-- github / config / cloudflare-expert              specialist boundaries
+direct (default) / autopilot
+  +-- coder / review / adversarial
+  +-- utility / operations
+  `-- config / github / cloudflare
 ```
 
-`orchestrator` dispatches tranches straight to the implementing worker, with no intermediate control plane. `subagent_depth: 3` covers `orchestrator -> code -> ops-*`.
+Maximum one OpenCode delegation hop. Every worker is terminal, enforced by
+ordered permissions as well as instructions. Missing expertise returns to the
+primary, which may commission another independent leaf. No manager-to-manager,
+coder-to-operations, or reviewer-to-reviewer chain.
 
-## Workers
+**Direct** keeps design, implementation, debugging, validation, and judgment in
+one context. Delegate only for real independence, specialty, isolation, or useful
+parallelism. Its intentional `mode: all` and Sol XHigh default are preserved;
+if explicitly invoked as a child it must not delegate. Depth `1` blocks that
+second hop even though its primary permissions permit named leaves.
 
-| Agent | Default model | Role |
+**Autopilot** owns an accepted outcome. It can implement directly or commission
+bounded leaves, inspect evidence, correct, and continue accepted phases. Only
+substantial work needs its single private recovery checkpoint. `/program` selects
+Autopilot, not an intermediary. See [workstreams](docs/workstreams.md).
+
+## Inventory and defaults
+
+| Role | Default | Responsibility |
 | --- | --- | --- |
-| `claude` | Luna High wrapper -> Claude Code Opus 5.5 | Substantive implementation, planning, and cross-family review through Switchboard |
-| `antigravity` | Luna High wrapper -> Gemini 3.8 Flash | Independent Gemini attempt or broad cross-file synthesis through Switchboard |
-| `code` | Sol High | Routine, well-specified implementation and debugging |
-| `review` | Sol High | Independent read-only review |
-| `adversarial` | Grok 4.7 | Read-only failure hunting: breaking inputs, states, interleavings |
-| `ops-context` | Sol Medium | Long tests and builds, large logs, evidence synthesis |
-| `ops-fast` | Luna High | Short focused commands and lookups |
-| `qwen-task` | Ollama Qwen | Cheap resumable reruns and repetitive commands |
-| `utility` | Luna Medium | Explicit mechanical edits, docs, simple configuration |
-| `github` | Sol Medium | Git and GitHub lifecycle |
-| `config` | Sol Medium | OpenCode configuration and agent-definition repairs |
-| `cloudflare-expert` | Sol High | Cloudflare infrastructure |
+| direct | openai/gpt-6.1-sol#xhigh | Default single-context engineer; mode all |
+| autopilot | openai/gpt-6.1-sol#high | Outcome-owning primary |
+| coder | openai/gpt-6.1-sol#high | One cohesive engineering outcome |
+| review | openai/gpt-6.1-sol#high | Independent read-only assessment |
+| adversarial | xai/grok-4.7 | Read-only failure hunting |
+| utility | openai/gpt-6-luna#medium | Settled mechanical edits/checks |
+| operations | openai/gpt-6-luna#high | No-edit execution, retrieval, noisy evidence |
+| config | openai/gpt-6.1-sol#medium | OpenCode definitions/configuration |
+| github | openai/gpt-6.1-sol#medium | Authorized Git/GitHub lifecycle |
+| cloudflare | openai/gpt-6.1-sol#high | Cloudflare infrastructure; stronger existing default retained |
 
-The wrappers (`claude`, `antigravity`) are thin: they translate a task into one Switchboard delegation and return the result. The OpenCode `subagent` `model` parameter changes only the wrapper; pass `externalModel` and `externalEffort` in the task prompt to select the external model. External harnesses do not inherit OpenCode permissions or hooks, so parents state applicable policy in the task.
+Identity denotes responsibility, not a model. Use native agent `model:
+provider/model#variant`, normal model selection, or the V2 subagent `model`
+override. Honor explicit user selection. Reasoning, continuity, and validation
+come before cost; never silently weaken a selection after failure. Other
+configured non-Anthropic models, including Astra and local models, are selectable
+when justified. No rigid cheap-first routing or inference of availability from spend.
+For repetitive operations the previous local selection remains available as
+`operations` with `model: ollama/qwen3.8:27b`; for deeper evidence synthesis use
+a justified override such as `openai/gpt-6.1-sol#medium`. Check configured model
+availability before selecting, rather than creating model-named roles.
 
-Autonomous child-model overrides are limited to Luna Medium/High, Sol Medium/High, and Astra Medium. A model the user names explicitly is always honored; use `/models` for exact IDs.
+Selecting a primary agent by ID does not change the session's stored model.
+Select the intended model/variant explicitly for an existing session; the root
+default model does not retain variants. Agent/command references and native
+subagent model overrides avoid model-named worker identities.
 
-## Permissions
+The engineer who changes code runs checks and reads failures. A primary may
+commission operations separately when isolation helps. Commission fresh
+independent review when risk or policy warrants it, optionally across model
+families; add adversarial review for consequential failure modes. Reviews are not
+automatic planning/implementation/escalation chains.
 
-Agent files use OpenCode 2 ordered permission rules (`action`, `resource`, `effect`). Global rules apply before agent rules and the last match wins, so the broad-deny-then-allow pattern here is intentional. A child uses its own permissions; the parent's `subagent` rules only decide which children it may launch. Command deny lists are guardrails, not a sandbox.
+### Optional human-selected profiles
 
-The global configuration also hard-denies read access to `*.env` and `*.env.*` and shell commands naming `.env`. These policies override agent allows and saved approvals, but they are not OS isolation. Only `config` may load `customize-opencode`.
+- `gated-direct`: normal project edits, approval-gated shell/external access;
+  terminal even when invoked as a child.
+- `tutor`: Socratic teaching, no implementation or delegation.
+- `contained`: primary separating trust boundaries. Its terminal
+  `contained-code-local`, `contained-net-research`, and `contained-text-only`
+  leaves retain local/no-network, public-internet/no-repository, and sanitized
+  text-only boundaries respectively. Tool permissions are not an OS sandbox.
 
-## Contract checks
+### Optional external adapters
 
-After changing agents or global routing and permissions, run:
+`claude` and `antigravity` are explicit user selections, not ordinary workflow
+routes or fallbacks. They are terminal OpenCode adapters through independently
+installed [Switchboard](https://github.com/christian-taillon/opencode-switchboard).
+The ordinary workflow works without either adapter or plugin. These files alone
+own external harness/model/effort selection, mode, continuation, permission
+boundaries, and failure handling. Their OpenCode model changes only the wrapper;
+`externalModel`/`externalEffort` select the external process. External processes
+are integration calls, not additional OpenCode delegation hops, and do not inherit
+OpenCode permission enforcement. Never copy external vendor configuration here.
+
+After installing the plugin and both wrapper files, separately merge the tiny
+[optional command fragment](examples/switchboard.json) to enable `/claude` and
+`/antigravity`. These explicit user commands create native background children,
+using each wrapper's configured Luna High model. They are separate from `/program`
+and do not grant ordinary primaries adapter-launch permissions. `@claude` text
+alone is not a supported entry point under this routing policy. External task
+model/mode/authority remains the dedicated adapter's responsibility. Review any
+installed command overrides before activation; neither commands nor plugin are
+installed automatically by this repository.
+
+## Installation and configuration
+
+Review models and permissions before copying selected files into global
+`~/.config/opencode/agents/` or project `.opencode/agents/`. Keep the flat layout:
+paths define IDs. Documentation in the tree is `disabled: true`.
+
+Global configuration is applied first. Discovered project direct configs are
+merged farthest-to-closest, then `.opencode` configs farthest-to-closest; local
+agent/command overrides can change the result. Inspect them before activation.
+Markdown agents own behavior; do not duplicate their prompts in JSON.
+Use `AGENTS.md` for active global/project guidance: the config `instructions`
+array currently accepts entries but does not resolve them.
+
+V2.0.26's installed schema and runner support:
+
+```json
+{"default_agent":"direct","experimental":{"subagent_depth":1}}
+```
+
+Top-level `subagent_depth` is unsupported in that version. The runner counts the
+calling session's ancestors: primary depth `0` may launch a leaf; leaf depth `1`
+cannot launch again. Verify against the installed version on upgrades, rather
+than assuming the public schema is V2. [Example](examples/workstreams.json)
+contains the flat `/program` command and optional output/compaction settings.
+The command explicitly sets `subagent: false` to stay in the current session,
+with its existing Sol High model selection. Native child sessionIDs, relevant
+skills, compaction, and Git worktrees supply continuity and isolation; no custom
+scheduler, shared instruction framework, or new plugin is required.
+
+Global permission rules precede agent rules; last matching rule wins. Children
+use their own permissions; parent rules select callable IDs. Keep destructive
+denials and hard privacy policies, including environment-file read/shell denials.
+Only `config` may load `customize-opencode`. Broad shell access is not a sandbox;
+tests can write artifacts and command deny lists are guardrails.
+
+Direct retains native Code Mode `execute` access. That permission enables the
+runtime, not every nested tool: each nested tool remains subject to its own
+rules. The primary's broad-deny-first policy still denies unallowed integration
+tools. No Code Mode access is added to profiles that deliberately lacked it.
+
+V2.0.26 hard permission policies use `experimental.policies` with action
+`tool.use` and resources such as `read:*.env` or `shell:*.env*`. Its policy hook
+hard-denies matching permission checks. Current public policy docs describe
+`action: permission`, while pinned V2.0.26 source and the inspected installed
+executable's embedded schema and enforcement hook use `tool.use`. This is a
+version-dependent migration: guard the old rules and rename the action only
+after verifying the target implementation, preserving resources and deny
+effects. Static executable inspection does not qualify the running server or
+active policy enforcement.
+
+## Migration (no aliases)
+
+| Previous ID | Replacement | Decision |
+| --- | --- | --- |
+| code | coder | One generic coding responsibility |
+| cloudflare-expert | cloudflare | Same specialist/model/permissions, shorter responsibility ID |
+| orchestrator | autopilot | Bounded phases and durable recovery absorbed |
+| ops-fast, ops-context | operations | Same no-edit authority; scope/model override selects effort |
+| qwen-task | operations with explicit local model override | No-edit/destructive restrictions retained or strengthened; broader operational tools |
+| yolo | direct | No unique trust boundary beyond direct execution; direct remains authoritative |
+
+Operations deliberately has broader operational tools than the previous local
+task profile: external-directory access asks and web tools are allowed. Its
+no-edit/destructive restrictions are retained or strengthened; this is not a
+claim that every former permission was equally restrictive.
+
+Other original roles are retained or optional as listed above. No compatibility
+aliases remain. Remove old files, routes, command IDs, and project/global instruction
+references deliberately. Change `/program`'s agent to `autopilot`; live Markdown
+command overrides must also be migrated, not just a JSON example.
+
+The staged safety migration removes unconditional temporary-delete allows (a
+wildcard also matches traversal or extra arguments), preserves approval for those
+deletes, and keeps important force-push/reset/sudo denies after Plan's broad shell
+ask. Broad-shell specialists also deny short `git push -f`. These are narrow
+ordering corrections, not a shell sandbox or a comprehensive command parser.
+
+Apply guarded JSON Patch operations only to an in-memory copy. Complete every
+precondition and operation, including the full expected safe `experimental`
+object, before atomically persisting a separately authorized result. A changed or
+existing nested depth must fail closed, not be overwritten by `add`. Never persist
+partial results after a failed test or copy credential-bearing configs into a
+candidate or diagnostic. Verify the target implementation separately.
+
+Prepare changes outside a live installation: native config and command files can
+auto-reload, so isolation is necessary even without an explicit restart. Never
+overwrite dirty input or copy
+a credential-bearing config. Apply only reviewed routing/depth patches, preserving
+providers, personal models, policy, and unrelated settings. Activation is separate
+authority: drain work and close clients before an operator changes/restarts the
+native shared service. Keep old active sessions intact until then; native clients
+can respawn the server. Do not start a private server as a workaround.
+
+## Validation
 
 ```sh
 uv run tests/test_config.py
+uv run tests/test_config.py --config /path/to/sanitized-installation-candidate.json
 ```
 
-It checks agent shapes, ordered permission and hard-policy behavior, default and specialist routing, the review boundary, skill isolation, and the routing topology. It reads configuration without resolving credentials and never opens environment files. It does not prove runtime behavior; use `--config` and `--agents` for another installation.
+The default uses the tracked sanitized fixture, never a personal global config.
+The explicit option checks supplied configuration without interpolation or printing
+its values. Do not supply environment files or symlinks. Tests check static fields,
+named routes, depth, last-match permission outcomes, role boundaries, and adapter isolation;
+they do not simulate a sandbox or qualify a running server. Validate candidate
+normalization against the pinned installed V2 schema before activation, then perform
+separately authorized runtime checks. Source/static passes are not runtime proof.
+The supplied candidate is treated as a global document followed by its Markdown
+agent directory, matching the pinned loader. Later project overrides, saved
+approvals, managed policies, arbitrary scripts, and grep resource semantics remain
+outside this bounded static proof; validate those separately where acceptance needs them.
+
+References: [V2 agents](https://opencode.ai/v2/docs/agents),
+[config](https://opencode.ai/v2/docs/config),
+[permissions](https://opencode.ai/v2/docs/permissions),
+[policies](https://opencode.ai/v2/docs/policies),
+[models](https://opencode.ai/v2/docs/models),
+[commands](https://opencode.ai/v2/docs/commands),
+[instructions](https://opencode.ai/v2/docs/instructions),
+[skills](https://opencode.ai/v2/docs/skills),
+[compaction](https://opencode.ai/v2/docs/compaction).

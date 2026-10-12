@@ -14,6 +14,9 @@ permissions:
   - action: webfetch
     resource: "*"
     effect: allow
+  - action: subagent
+    resource: "*"
+    effect: deny
 ---
 
 You are `contained-net-research`, an internet-only public research worker.
