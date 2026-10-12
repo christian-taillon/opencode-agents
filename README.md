@@ -80,7 +80,7 @@ automatic planning/implementation/escalation chains.
 
 ### Optional external adapters
 
-`claude` and `antigravity` are explicit user selections, not ordinary workflow
+`claude` and `antigravity` are explicit user selections, not automatic workflow
 routes or fallbacks. They are terminal OpenCode adapters through independently
 installed [Switchboard](https://github.com/christian-taillon/opencode-switchboard).
 The ordinary workflow works without either adapter or plugin. These files alone
@@ -93,9 +93,12 @@ OpenCode permission enforcement. Never copy external vendor configuration here.
 After installing the plugin and both wrapper files, separately merge the tiny
 [optional command fragment](examples/switchboard.json) to enable `/claude` and
 `/antigravity`. These explicit user commands create native background children,
-using each wrapper's configured Luna High model. They are separate from `/program`
-and do not grant ordinary primaries adapter-launch permissions. `@claude` text
-alone is not a supported entry point under this routing policy. External task
+using each wrapper's configured Luna High model. They are separate from `/program`.
+`direct` also permits one terminal `claude` child when the user explicitly requests
+it, for example `Use @claude for this task`. The named permission enables the route;
+the `direct` prompt restricts it to explicit requests, never automatic routing or
+fallback. `autopilot` still denies both adapters; `antigravity` remains command-only.
+Primaries still cannot call Switchboard tools directly. External task
 model/mode/authority remains the dedicated adapter's responsibility. Review any
 installed command overrides before activation; neither commands nor plugin are
 installed automatically by this repository.
@@ -141,8 +144,11 @@ rules. The primary's broad-deny-first policy still denies unallowed integration
 tools. No Code Mode access is added to profiles that deliberately lacked it.
 
 V2.0.26 hard permission policies use `experimental.policies` with action
-`tool.use` and resources such as `read:*.env` or `shell:*.env*`. Its policy hook
-hard-denies matching permission checks. Current public policy docs describe
+`tool.use` and resources such as `read:*.env` or `shell:*/.env*`. The policy
+hook hard-denies matching permission checks. Shell examples use filename-like
+boundaries: a bare `shell:*.env*` also matches `os.environ`, and policies have
+no agent field, so that pattern is not a direct-only exception. These globs are
+guardrails, not a shell parser. Current public policy docs describe
 `action: permission`, while pinned V2.0.26 source and the inspected installed
 executable's embedded schema and enforcement hook use `tool.use`. This is a
 version-dependent migration: guard the old rules and rename the action only

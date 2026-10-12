@@ -72,6 +72,9 @@ permissions:
   - action: subagent
     resource: adversarial
     effect: allow
+  - action: subagent
+    resource: claude
+    effect: allow
   - action: shell
     resource: "git push --force*"
     effect: deny
@@ -123,6 +126,7 @@ Delegate only when it buys something: isolation from noisy output, an independen
 - `operations` for isolated execution/evidence; `utility` for settled mechanical follow-up; `coder` only for a genuinely separable engineering outcome, not as the default implementation lane.
 - Commission `review` independently when risk or policy warrants it, using a fresh context and, when available and justified, a different model family. Add `adversarial` for consequential failure hunting. Verify findings rather than treating a verdict as proof.
 - `config` for agent-definition and OpenCode routing repairs (do not edit `~/.config/opencode/agents` yourself), `github` for Git and GitHub lifecycle, `cloudflare` for Cloudflare.
+- Only when the user explicitly requests `claude`, invoke that terminal adapter for the bounded task. Never select it automatically for implementation, review, escalation, or fallback. The adapter owns external selection and permissions; do not call integration tools or a vendor CLI to bypass a denied handoff.
 
 Commit or push only when explicitly requested or required by an accepted repository workflow. Never force-push or discard user work.
 

@@ -182,7 +182,12 @@ class ConfigContracts(unittest.TestCase):
                     self.expect(name, tool, "*", "deny")
             if name in ("direct", "autopilot"):
                 for child in ADAPTERS:
-                    self.expect(name, "subagent", child, "deny")
+                    self.expect(
+                        name,
+                        "subagent",
+                        child,
+                        "allow" if (name, child) == ("direct", "claude") else "deny",
+                    )
         for name in ("review", "adversarial", "operations", "tutor"):
             self.expect(name, "edit", "src/main.py", "deny")
         for name in (
@@ -274,8 +279,22 @@ class ConfigContracts(unittest.TestCase):
             self.assertEqual(self.agents[name]["mode"], "subagent")
             selected = command.get("model", self.agents[name]["model"])
             self.assertEqual(selected, "openai/gpt-6-luna#high")
-            for parent in ("direct", "autopilot"):
-                self.expect(parent, "subagent", name, "deny")
+
+    def test_explicit_claude_request_route(self):
+        self.expect("direct", "subagent", "claude", "allow")
+        self.expect("direct", "subagent", "antigravity", "deny")
+        self.expect("autopilot", "subagent", "claude", "deny")
+        for tool in ("switchboard_delegate", "switchboard_harnesses"):
+            self.expect("direct", tool, "*", "deny")
+            self.expect("claude", tool, "*", "allow")
+        self.expect("claude", "shell", "claude synthetic-task", "deny")
+        self.assertIn(
+            "Only when the user explicitly requests `claude`", self.bodies["direct"]
+        )
+        self.assertIn("Never select it automatically", self.bodies["direct"])
+        self.assertIn(
+            "explicit user-requested delegation from `direct`", self.bodies["claude"]
+        )
 
     def test_native_shapes(self):
         self.assertIsInstance(self.config, dict)
@@ -345,7 +364,10 @@ class ConfigContracts(unittest.TestCase):
                 for r in routes:
                     if r["effect"] != "deny":
                         self.assertIn(r["resource"], LEAVES)
-                        self.assertNotIn(r["resource"], ADAPTERS)
+                        if r["resource"] in ADAPTERS:
+                            self.assertEqual(
+                                (name, r["resource"]), ("direct", "claude")
+                            )
                         self.assertIn(
                             self.agents[r["resource"]]["mode"], {"all", "subagent"}
                         )
@@ -371,7 +393,7 @@ class ConfigContracts(unittest.TestCase):
                     for r in self.agents[name]["permissions"]
                     if r["action"] == "subagent" and r["effect"] == "allow"
                 },
-                expected,
+                expected | ({"claude"} if name == "direct" else set()),
             )
 
     def test_boundaries(self):
@@ -405,32 +427,47 @@ class ConfigContracts(unittest.TestCase):
                 "customize-opencode",
                 "allow" if name == "config" else "deny",
             )
+
+    def test_environment_file_policies(self):
         policies = self.config.get("experimental", {}).get("policies", [])
         # Pinned policy hook selects the last tool.use match; allow lifts a deny.
-        for resources in (
-            ("read:.env", "read:/synthetic/.env", "read:/synthetic/config.env"),
-            (
-                "read:/synthetic/.env.example",
-                "read:/synthetic/.env.backup",
-                "read:/synthetic/.env.local.bak",
-            ),
-            (
-                "shell:cat /synthetic/.env",
-                "shell:cat /synthetic/.env.example",
-                "shell:printf .env.backup",
-            ),
-        ):
+        # These are synthetic resources, never files read or commands executed.
+        blocked = (
+            "read:.env",
+            "read:/synthetic/.env",
+            "read:/synthetic/config.env",
+            "read:/synthetic/.env.example",
+            "read:/synthetic/.env.backup",
+            "read:/synthetic/.env.local.bak",
+            "shell:cat /synthetic/.env",
+            "shell:cat /synthetic/.env.example",
+            "shell:printf .env.backup",
+            "shell:cat .env",
+            'shell:cat ".env"',
+            "shell:cat '.env'",
+            "shell:cat config.env",
+            "shell:cat config.env other.txt",
+            'shell:cat "config.env"',
+            "shell:cat 'config.env'",
+            "shell:printf `cat config.env`",
+        )
+        ordinary = (
+            "shell:python3 -c 'import os; assert os.environ is not None'",
+            "shell:python3 -c 'import os; assert list(os.environ)'",
+        )
+        for resources, expected in ((blocked, "deny"), (ordinary, "allow")):
             for resource in resources:
-                selected = next(
-                    (
-                        p
-                        for p in reversed(policies)
-                        if p["action"] == "tool.use"
-                        and matches(resource, p["resource"])
-                    ),
-                    {},
-                )
-                self.assertEqual(selected.get("effect"), "deny", resource)
+                with self.subTest(resource=resource):
+                    selected = next(
+                        (
+                            p
+                            for p in reversed(policies)
+                            if p["action"] == "tool.use"
+                            and matches(resource, p["resource"])
+                        ),
+                        {},
+                    )
+                    self.assertEqual(selected.get("effect", "allow"), expected)
 
     def test_model_independence_and_adapter_isolation(self):
         for name, data in self.config.get("agents", {}).items():
@@ -466,8 +503,10 @@ class ConfigContracts(unittest.TestCase):
                 if name not in ADAPTERS:
                     self.assertNotRegex(
                         self.bodies[name].lower(),
-                        r"claude|anthropic|switchboard|externalmodel|externaleffort",
+                        r"anthropic|switchboard|externalmodel|externaleffort",
                     )
+                    if name != "direct":
+                        self.assertNotRegex(self.bodies[name].lower(), r"claude")
                     self.assertFalse(
                         any(
                             r["effect"] == "allow"
