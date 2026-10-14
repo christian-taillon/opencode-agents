@@ -21,13 +21,14 @@ PREVIOUS_CLOUDFLARE = "cloudflare" + "-expert"
 RETIRED = {
     "code",
     "orchestrator",
+    "autopilot",
     "ops-fast",
     "ops-context",
     "qwen-task",
     "yolo",
     PREVIOUS_CLOUDFLARE,
 }
-PRIMARIES = {"direct", "autopilot", "contained"}
+PRIMARIES = {"direct", "contained"}
 ADAPTERS = {"claude", "antigravity"}
 LEAVES = {
     "coder",
@@ -180,7 +181,7 @@ class ConfigContracts(unittest.TestCase):
             if name not in ADAPTERS:
                 for tool in ("switchboard_delegate", "switchboard_harnesses"):
                     self.expect(name, tool, "*", "deny")
-            if name in ("direct", "autopilot"):
+            if name == "direct":
                 for child in ADAPTERS:
                     self.expect(
                         name,
@@ -192,7 +193,6 @@ class ConfigContracts(unittest.TestCase):
             self.expect(name, "edit", "src/main.py", "deny")
         for name in (
             "direct",
-            "autopilot",
             "coder",
             "utility",
             "operations",
@@ -276,15 +276,13 @@ class ConfigContracts(unittest.TestCase):
     def test_explicit_claude_request_route(self):
         self.expect("direct", "subagent", "claude", "allow")
         self.expect("direct", "subagent", "antigravity", "deny")
-        self.expect("autopilot", "subagent", "claude", "deny")
         for tool in ("switchboard_delegate", "switchboard_harnesses"):
             self.expect("direct", tool, "*", "deny")
             self.expect("claude", tool, "*", "allow")
         self.expect("claude", "shell", "claude synthetic-task", "deny")
-        self.assertIn(
-            "Only when the user explicitly requests `claude`", self.bodies["direct"]
-        )
-        self.assertIn("Never select it automatically", self.bodies["direct"])
+        # Selection policy lives in ambient instructions and the explicit command.
+        # Text-matching a prompt never proves user authorization at runtime.
+        self.assertEqual(self.bodies["direct"].strip(), "")
         self.assertIn(
             "explicit user-requested delegation from `direct`", self.bodies["claude"]
         )
@@ -336,7 +334,6 @@ class ConfigContracts(unittest.TestCase):
         self.assertEqual(self.config.get("default_agent"), "direct")
         self.assertEqual(self.agents["direct"]["mode"], "all")
         self.assertEqual(self.agents["direct"]["model"], "openai/gpt-6.1-sol#xhigh")
-        self.assertEqual(self.agents["autopilot"]["mode"], "primary")
         self.assertEqual(self.agents["coder"]["model"], "openai/gpt-6.1-sol#high")
         self.assertEqual(self.agents["cloudflare"]["model"], "openai/gpt-6.1-sol#high")
         self.assertEqual(self.agents["cloudflare"]["mode"], "all")
@@ -379,7 +376,7 @@ class ConfigContracts(unittest.TestCase):
             "github",
             "cloudflare",
         }
-        for name in ("direct", "autopilot"):
+        for name in ("direct",):
             self.assertEqual(
                 {
                     r["resource"]
@@ -511,8 +508,42 @@ class ConfigContracts(unittest.TestCase):
             self.assertTrue(has_rule(self.agents[name], "execute", "*", "allow"))
             self.assertFalse(has_rule(self.agents[name], "shell", "*", "allow"))
         self.assertTrue(has_rule(self.agents["direct"], "execute", "*", "allow"))
-        for name in self.agents.keys() - ADAPTERS - {"direct"}:
+        for name in self.agents.keys() - ADAPTERS - {"direct", "github", "cloudflare"}:
             self.assertFalse(has_rule(self.agents[name], "execute", "*", "allow"), name)
+
+    def test_native_engineering_prompts(self):
+        for name in ("direct", "coder"):
+            with self.subTest(agent=name):
+                self.assertEqual(self.bodies[name].strip(), "")
+                self.assertFalse(self.agents[name].get("system"))
+                self.assertFalse(self.config.get("agents", {}).get(name, {}).get("system"))
+
+    def test_direct_owns_routine_git(self):
+        for command in ("git diff --stat", "git commit -m synthetic", "git push origin", "gh pr create --draft"):
+            self.expect("direct", "shell", command, "allow")
+        # A native prompt must not turn a worker into a lifecycle agent.
+        for command in ("git commit -m synthetic", "git push origin"):
+            self.expect("coder", "shell", command, "deny")
+        self.expect("direct", "subagent", "direct", "deny")
+        self.expect("direct", "subagent", "autopilot", "deny")
+
+    def test_mcp_execution_and_isolation(self):
+        for name in ("github", "cloudflare"):
+            self.expect(name, "execute", "*", "allow")
+            self.expect(name, "switchboard_delegate", "*", "deny")
+        self.expect("github", "github_create_pull_request", "*", "allow")
+        self.expect("github", "cloudflare-api_request", "*", "deny")
+        self.expect("cloudflare", "cloudflare-api_request", "*", "allow")
+        self.expect("cloudflare", "cloudflare-docs_search", "*", "allow")
+        self.expect("cloudflare", "github_create_pull_request", "*", "deny")
+        for name in ("direct", "coder", "operations", "review"):
+            for action in ("github_create_pull_request", "cloudflare-api_request", "cloudflare-docs_search"):
+                self.expect(name, action, "*", "deny")
+                # V2.0.26 Tool.snapshot hides wholly-denied actions before building
+                # direct definitions or the Code Mode catalog. Not a live-server test.
+                rules = [rule for group in self.rules(name) for rule in group]
+                last = next(rule for rule in reversed(rules) if matches(action, rule["action"]))
+                self.assertEqual((last["resource"], last["effect"]), ("*", "deny"))
 
     def test_removed_references(self):
         for command in self.config.get("commands", {}).values():

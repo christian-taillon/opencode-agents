@@ -4,228 +4,154 @@ disabled: true
 
 # opencode-agents
 
-Generic OpenCode 2 roles, optimized for correct, maintainable work before cost.
+Permission-scoped OpenCode 2 profiles. Keep cohesive engineering in one context;
+use a child only when independence, substantial context isolation, or a distinct
+capability earns the handoff cost.
 
-## Flat design
+## Default workflow
 
-```text
-direct (default) / autopilot
-  +-- coder / review / adversarial
-  +-- utility / operations
-  `-- config / github / cloudflare
-```
+`direct` investigates, implements, validates, and performs authorized routine Git
+and `gh` work itself. A commit, normal push, or simple PR is not a reason to launch
+another model. The engineer who changed the code reads its own failures.
 
-Maximum one OpenCode delegation hop. Every worker is terminal, enforced by
-ordered permissions as well as instructions. Missing expertise returns to the
-primary, which may commission another independent leaf. No manager-to-manager,
-coder-to-operations, or reviewer-to-reviewer chain.
+`direct.md` and `coder.md` intentionally have **empty Markdown bodies**. They retain
+model selection, descriptions, and ordered permissions while OpenCode supplies
+its native model-specific system prompt. Do not add explanatory text below their
+frontmatter: even one sentence replaces that default. Put shared project policy
+in the applicable `AGENTS.md`, and task-specific procedures in selectively loaded
+skills or the task itself. Do not paste Codex or upstream OpenCode prompts here.
 
-**Direct** keeps design, implementation, debugging, validation, and judgment in
-one context. Delegate only for real independence, specialty, isolation, or useful
-parallelism. Its intentional `mode: all` and Sol XHigh default are preserved;
-if explicitly invoked as a child it must not delegate. Depth `1` blocks that
-second hop even though its primary permissions permit named leaves.
+This behavior is verified in the source of **OpenCode v2.0.26**. It is not proof
+that a particular host, override, or future version resolves identically.
 
-**Autopilot** owns an accepted outcome. It can implement directly or commission
-bounded leaves, inspect evidence, correct, and continue accepted phases. Only
-substantial work needs its single private recovery checkpoint. `/program` selects
-Autopilot, not an intermediary. See [workstreams](docs/workstreams.md).
+## Profiles
 
-## Inventory and defaults
-
-| Role | Default | Responsibility |
+| Profile | Default | Reason to use |
 | --- | --- | --- |
-| direct | openai/gpt-6.1-sol#xhigh | Default single-context engineer; mode all |
-| autopilot | openai/gpt-6.1-sol#high | Outcome-owning primary |
-| coder | openai/gpt-6.1-sol#high | One cohesive engineering outcome |
+| direct | openai/gpt-6.1-sol#xhigh | One primary engineering context; native system prompt |
+| coder | openai/gpt-6.1-sol#high | Substantial separable implementation; native prompt; no commit/push or children |
 | review | openai/gpt-6.1-sol#high | Independent read-only assessment |
-| adversarial | xai/grok-4.7 | Read-only failure hunting |
-| utility | openai/gpt-6-luna#medium | Settled mechanical edits/checks |
-| operations | openai/gpt-6-luna#high | No-edit execution, retrieval, noisy evidence |
-| config | openai/gpt-6.1-sol#medium | OpenCode definitions/configuration |
-| github | openai/gpt-6.1-sol#medium | Authorized Git/GitHub lifecycle |
-| cloudflare | openai/gpt-6.1-sol#high | Cloudflare infrastructure; stronger existing default retained |
+| adversarial | xai/grok-4.7 | Independent failure hunting |
+| operations | openai/gpt-6-luna#high | Long/noisy execution and evidence isolation; no implementation |
+| utility | openai/gpt-6-luna#medium | Settled mechanical edits where delegation actually pays |
+| github | openai/gpt-6.1-sol#medium | Substantial remote lifecycle, release, or CI work; optional MCP access |
+| cloudflare | openai/gpt-6.1-sol#high | Cloudflare-specific API/documentation capabilities |
+| config | openai/gpt-6.1-sol#medium | OpenCode configuration and routing changes |
 
-Identity denotes responsibility, not a model. Use native agent `model:
-provider/model#variant`, normal model selection, or the V2 subagent `model`
-override. Honor explicit user selection. Reasoning, continuity, and validation
-come before cost; never silently weaken a selection after failure. Other
-configured non-Anthropic models, including Astra and local models, are selectable
-when justified. No rigid cheap-first routing or inference of availability from spend.
-For repetitive operations the previous local selection remains available as
-`operations` with `model: ollama/qwen3.8:27b`; for deeper evidence synthesis use
-a justified override such as `openai/gpt-6.1-sol#medium`. Check configured model
-availability before selecting, rather than creating model-named roles.
+The existing model/effort defaults are deliberately retained, not claimed to be
+optimal. Benchmark effort separately from this prompting change. Session model
+selection is independent of primary-agent selection; verify the resolved pair.
+A user-requested subagent model override selects that child's model. Do not
+silently weaken a selection after provider failure.
 
-Selecting a primary agent by ID does not change the session's stored model.
-Select the intended model/variant explicitly for an existing session; the root
-default model does not retain variants. Agent/command references and native
-subagent model overrides avoid model-named worker identities.
+The optional `gated-direct`, `tutor`, and `contained*` profiles remain distinct
+human-approval, teaching, or trust workflows. Install only profiles you use.
+Specialists keep short purpose-specific system prompts where an execution or
+review contract is more useful than generic coding behavior. Empty bodies are
+not a universal requirement.
 
-The engineer who changes code runs checks and reads failures. A primary may
-commission operations separately when isolation helps. Commission fresh
-independent review when risk or policy warrants it, optionally across model
-families; add adversarial review for consequential failure modes. Reviews are not
-automatic planning/implementation/escalation chains.
+## Long work without a manager hierarchy
 
-### Optional human-selected profiles
+Use one owner with terminal workers. The owner can implement directly, send a
+bounded outcome to `coder`, inspect the diff and evidence, and resume that same
+child for corrections. It finishes the accepted outcome rather than making the
+user relay prompts. Independent review starts fresh. Dependent writers stay
+sequential; independent concurrent writers need separate worktrees and an
+integration owner. See [workstreams](docs/workstreams.md).
 
-- `gated-direct`: normal project edits, approval-gated shell/external access;
-  terminal even when invoked as a child.
-- `tutor`: Socratic teaching, no implementation or delegation.
-- `contained`: primary separating trust boundaries. Its terminal
-  `contained-code-local`, `contained-net-research`, and `contained-text-only`
-  leaves retain local/no-network, public-internet/no-repository, and sanitized
-  text-only boundaries respectively. Tool permissions are not an OS sandbox.
+Keep `experimental.subagent_depth: 1`. `direct` remains `mode: all`, but no
+self-delegation route is enabled. A narrower `coder` preserves the useful
+permission boundary without another coding prompt. No recursive manager chain,
+mandatory planning/review chain, scheduler, or prompt-merging plugin is needed.
 
-### Optional external adapters
+## Tool visibility and permissions
 
-`claude` and `antigravity` are explicit user selections, not automatic workflow
-routes or fallbacks. They are terminal OpenCode adapters through independently
+Profiles start deny-by-default and allow named capabilities. OpenCode v2.0.26
+filters wholly denied tools before building the direct tool list and Code Mode
+catalog. Skills and MCP server instructions have their own permission-aware
+filters. A connected server is not necessarily visible to every agent.
+
+Default MCP tools run through Code Mode. `github` and `cloudflare` therefore allow
+`execute` **and** only their intended nested MCP tool names. `execute` does not
+bypass nested checks. Other roles do not gain these MCP tools or Switchboard
+access. Connecting a disabled server remains a separate configuration change.
+
+Global rules precede agent rules; the last matching rule wins. Project overrides,
+saved approvals, plugins, and managed policy must also be considered. Permission
+patterns are guardrails, not OS containment: shell commands and tests can write
+files or access the network. Preserve hard privacy policies, destructive-command
+denials, and each profile's authority. Do not interpret a static pass as a sandbox
+or live-runtime qualification.
+
+## External harnesses
+
+`claude` and `antigravity` remain optional terminal adapters through independently
 installed [Switchboard](https://github.com/christian-taillon/opencode-switchboard).
-The ordinary workflow works without either adapter or plugin. These files alone
-own external harness/model/effort selection, mode, continuation, permission
-boundaries, and failure handling. Their OpenCode model changes only the wrapper;
-`externalModel`/`externalEffort` select the external process. External processes
-are integration calls, not additional OpenCode delegation hops, and do not inherit
-OpenCode permission enforcement. Never copy external vendor configuration here.
+Their bodies and external model/effort, continuation, and failure contracts are
+unchanged. Install and authenticate vendor CLIs separately.
 
-After installing the plugin and selected wrapper files, configure any
-`/claude` or `/antigravity` commands in your global OpenCode configuration
-with their matching `agent` and `subagent: true`. These explicit user commands
-create native background children using each wrapper's configured Luna High
-model; they are separate from `/program`.
-`direct` also permits one terminal `claude` child when the user explicitly requests
-it, for example `Use @claude for this task`. The named permission enables the route;
-the `direct` prompt restricts it to explicit requests, never automatic routing or
-fallback. `autopilot` still denies both adapters; `antigravity` remains command-only.
-Primaries still cannot call Switchboard tools directly. External task
-model/mode/authority remains the dedicated adapter's responsibility. Review any
-installed command overrides before activation; neither commands nor plugin are
-installed automatically by this repository.
+Keep `/claude` and `/antigravity` as explicit commands with their respective
+`agent` and `subagent: true`. `direct` may delegate to `claude` only on an explicit
+user request; preserve that selection rule in ambient `AGENTS.md`. Antigravity
+remains explicit-command-only. Neither is an automatic fallback. The direct
+Switchboard tools remain denied to ordinary engineering profiles.
 
-## Installation and configuration
+The OpenCode wrapper's model is not the external CLI's model. Vendor tools do not
+inherit OpenCode shell hooks or permission enforcement. Keep vendor configuration
+and credentials outside this public repository. The ordinary workflow requires
+neither adapter.
 
-Review models and permissions before copying selected files into global
-`~/.config/opencode/agents/` or project `.opencode/agents/`. Keep the flat layout:
-paths define IDs. Documentation in the tree is `disabled: true`.
+## Installation and migration
 
-Global configuration is applied first. Discovered project direct configs are
-merged farthest-to-closest, then `.opencode` configs farthest-to-closest; local
-agent/command overrides can change the result. Inspect them before activation.
-Markdown agents own behavior; do not duplicate their prompts in JSON.
-Use `AGENTS.md` for active global/project guidance: the config `instructions`
-array currently accepts entries but does not resolve them.
+Install selected root-level agent Markdown files into
+`~/.config/opencode/agents/` or a project's `.opencode/agents/`. Review permissions
+first. Documentation is `disabled: true` to avoid accidental agent discovery.
+Keep provider credentials, private host settings, and active recovery state out
+of this repository.
 
-V2.0.26's installed schema and runner support:
+This revision removes `autopilot`. Its durable owner loop belongs in an explicit
+`/work` command/skill using `direct`, `subagent: false`, and an explicitly selected
+model. Update all installed `/program` overrides and references at the same time;
+remove the old agent and command rather than keeping aliases. The companion
+configuration supplies the workstream skill. Stage outside live configuration
+because files can auto-reload. Keep active sessions intact until controlled
+activation; an agent removal does not safely migrate their stored selections.
 
-```json
-{"default_agent":"direct","experimental":{"subagent_depth":1}}
-```
+An empty `direct` body also means shared authority rules must remain available:
+follow repository policy; preserve unrelated changes; protect environment files;
+authorize publication explicitly; delegate only when it earns its overhead;
+forward bounds and validation to children; select external adapters only on
+explicit request. Skills are procedures, not enforcement. V2.0.26 accepts a config
+`instructions` array without resolving it; use actual `AGENTS.md` files.
 
-Top-level `subagent_depth` is unsupported in that version. The runner counts the
-calling session's ancestors: primary depth `0` may launch a leaf; leaf depth `1`
-cannot launch again. Verify against the installed version on upgrades, rather
-than assuming the public schema is V2. Configure `/program` with
-`agent: autopilot`, `subagent: false`, and an explicit Sol High model
-selection to stay in the current session. Keep compaction and tool-output
-policy in the global OpenCode configuration rather than copying examples.
-Native child sessionIDs, relevant skills, compaction, and Git worktrees
-supply continuity and isolation; no custom scheduler, shared instruction
-framework, or new plugin is required.
-
-Global permission rules precede agent rules; last matching rule wins. Children
-use their own permissions; parent rules select callable IDs. Keep destructive
-denials and hard privacy policies, including environment-file read/shell denials.
-Only `config` may load `customize-opencode`. Broad shell access is not a sandbox;
-tests can write artifacts and command deny lists are guardrails.
-
-Direct retains native Code Mode `execute` access. That permission enables the
-runtime, not every nested tool: each nested tool remains subject to its own
-rules. The primary's broad-deny-first policy still denies unallowed integration
-tools. No Code Mode access is added to profiles that deliberately lacked it.
-
-V2.0.26 hard permission policies use `experimental.policies` with action
-`tool.use` and resources such as `read:*.env` or `shell:*/.env*`. The policy
-hook hard-denies matching permission checks. Shell examples use filename-like
-boundaries: a bare `shell:*.env*` also matches `os.environ`, and policies have
-no agent field, so that pattern is not a direct-only exception. These globs are
-guardrails, not a shell parser. Current public policy docs describe
-`action: permission`, while pinned V2.0.26 source and the inspected installed
-executable's embedded schema and enforcement hook use `tool.use`. This is a
-version-dependent migration: guard the old rules and rename the action only
-after verifying the target implementation, preserving resources and deny
-effects. Static executable inspection does not qualify the running server or
-active policy enforcement.
-
-## Migration (no aliases)
-
-| Previous ID | Replacement | Decision |
-| --- | --- | --- |
-| code | coder | One generic coding responsibility |
-| cloudflare-expert | cloudflare | Same specialist/model/permissions, shorter responsibility ID |
-| orchestrator | autopilot | Bounded phases and durable recovery absorbed |
-| ops-fast, ops-context | operations | Same no-edit authority; scope/model override selects effort |
-| qwen-task | operations with explicit local model override | No-edit/destructive restrictions retained or strengthened; broader operational tools |
-| yolo | direct | No unique trust boundary beyond direct execution; direct remains authoritative |
-
-Operations deliberately has broader operational tools than the previous local
-task profile: external-directory access asks and web tools are allowed. Its
-no-edit/destructive restrictions are retained or strengthened; this is not a
-claim that every former permission was equally restrictive.
-
-Other original roles are retained or optional as listed above. No compatibility
-aliases remain. Remove old files, routes, command IDs, and project/global instruction
-references deliberately. Change `/program`'s agent to `autopilot`; live Markdown
-command overrides must also be migrated, not just a JSON example.
-
-The staged safety migration removes unconditional temporary-delete allows (a
-wildcard also matches traversal or extra arguments), preserves approval for those
-deletes, and keeps important force-push/reset/sudo denies after Plan's broad shell
-ask. Broad-shell specialists also deny short `git push -f`. These are narrow
-ordering corrections, not a shell sandbox or a comprehensive command parser.
-
-Apply guarded JSON Patch operations only to an in-memory copy. Complete every
-precondition and operation, including the full expected safe `experimental`
-object, before atomically persisting a separately authorized result. A changed or
-existing nested depth must fail closed, not be overwritten by `add`. Never persist
-partial results after a failed test or copy credential-bearing configs into a
-candidate or diagnostic. Verify the target implementation separately.
-
-Prepare changes outside a live installation: native config and command files can
-auto-reload, so isolation is necessary even without an explicit restart. Never
-overwrite dirty input or copy
-a credential-bearing config. Apply only reviewed routing/depth patches, preserving
-providers, personal models, policy, and unrelated settings. Activation is separate
-authority: drain work and close clients before an operator changes/restarts the
-native shared service. Keep old active sessions intact until then; native clients
-can respawn the server. Do not start a private server as a workaround.
-
-## Validation
+## Validation and evaluation
 
 ```sh
 uv run tests/test_config.py
-uv run tests/test_config.py --config /path/to/sanitized-installation-candidate.json
+uv run tests/test_config.py --config /path/to/sanitized-candidate.json
 ```
 
-The default uses the tracked sanitized fixture, never a personal global config.
-The explicit option checks supplied configuration without interpolation or printing
-its values. Do not supply environment files or symlinks. Tests check static fields,
-named routes, depth, last-match permission outcomes, role boundaries, and adapter isolation;
-they do not simulate a sandbox or qualify a running server. Validate candidate
-normalization against the pinned installed V2 schema before activation, then perform
-separately authorized runtime checks. Source/static passes are not runtime proof.
-The supplied candidate is treated as a global document followed by its Markdown
-agent directory, matching the pinned loader. Later project overrides, saved
-approvals, managed policies, arbitrary scripts, and grep resource semantics remain
-outside this bounded static proof; validate those separately where acceptance needs them.
+The default uses a portable fixture, not personal configuration or credentials.
+The suite checks native shapes, empty engineering bodies, ordered permissions,
+terminal routes, adapter isolation, MCP Code Mode access, and privacy contracts.
+CI runs it on PRs. It does not emulate a provider, validate live authentication,
+or prove engineering-quality improvement.
 
-References: [V2 agents](https://opencode.ai/v2/docs/agents),
-[config](https://opencode.ai/v2/docs/config),
-[permissions](https://opencode.ai/v2/docs/permissions),
-[policies](https://opencode.ai/v2/docs/policies),
-[models](https://opencode.ai/v2/docs/models),
-[commands](https://opencode.ai/v2/docs/commands),
-[instructions](https://opencode.ai/v2/docs/instructions),
-[skills](https://opencode.ai/v2/docs/skills),
-[compaction](https://opencode.ai/v2/docs/compaction).
+Before activation verify the installed schema and actual provider-bound request:
+native GPT/Astra prompt present once; private policy still present; irrelevant
+MCP tools/instructions absent; allowed specialist tools reachable; children and
+external adapters retain their boundaries. Redact credentials and private code.
+
+Then compare baseline and candidate on identical clean worktrees, same model and
+effort, and representative bug-fix, refactor, Git-only, and long-work tasks.
+Measure acceptance, regressions, human corrections, unnecessary delegations,
+time, and available token/cache usage. Repeat representative cases; one successful
+run is not a general result. Keep a dated local record, not another service.
+
+## Design evidence
+
+- [OpenCode prompt selection](https://github.com/anomalyco/opencode/blob/v2.0.26/packages/core/src/plugin/optimize.ts) and [base transcript](https://github.com/anomalyco/opencode/blob/v2.0.26/packages/core/src/session/model-request.ts): a non-empty custom system bypasses the native model prompt.
+- [Tool snapshot](https://github.com/anomalyco/opencode/blob/v2.0.26/packages/core/src/tool.ts) and [MCP instructions](https://github.com/anomalyco/opencode/blob/v2.0.26/packages/core/src/mcp/instructions.ts): visibility and Code Mode reachability are distinct from prompt text.
+- [OpenAI harness engineering, February 2026](https://openai.com/index/harness-engineering/): make repository knowledge navigable and validate outcomes mechanically. Its throughput/merge choices are not blanket policy for other projects.
+- [Anthropic context engineering, September 2025](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents): use high-signal context and just-in-time retrieval, not exhaustive instructions.
+- [Anthropic multi-agent research, June 2025](https://www.anthropic.com/engineering/multi-agent-research-system): delegation helps independent breadth but adds cost. Its research results and token multipliers are not coding benchmarks.
