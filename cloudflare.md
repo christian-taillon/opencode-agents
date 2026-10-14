@@ -3,54 +3,57 @@ description: Cloudflare infrastructure specialist for DNS, Workers, Zero Trust, 
 mode: all
 model: openai/gpt-6.1-sol#high
 permissions:
-  - action: "*"
-    resource: "*"
-    effect: deny
-  - action: read
-    resource: "*"
-    effect: allow
-  - action: glob
-    resource: "*"
-    effect: allow
-  - action: grep
-    resource: "*"
-    effect: allow
-  - action: shell
-    resource: "*"
-    effect: allow
-  - action: webfetch
-    resource: "*"
-    effect: allow
-  - action: websearch
-    resource: "*"
-    effect: allow
-  - action: cloudflare-docs_*
-    resource: "*"
-    effect: allow
-  - action: cloudflare-api_*
-    resource: "*"
-    effect: allow
-  - action: shell
-    resource: "git push --force*"
-    effect: deny
-  - action: shell
-    resource: "git push -f *"
-    effect: deny
-  - action: shell
-    resource: "git reset --hard*"
-    effect: deny
-  - action: shell
-    resource: "git clean *"
-    effect: deny
-  - action: shell
-    resource: "rm -rf *"
-    effect: ask
-  - action: shell
-    resource: "sudo *"
-    effect: deny
-  - action: subagent
-    resource: "*"
-    effect: deny
+- action: '*'
+  resource: '*'
+  effect: deny
+- action: read
+  resource: '*'
+  effect: allow
+- action: glob
+  resource: '*'
+  effect: allow
+- action: grep
+  resource: '*'
+  effect: allow
+- action: shell
+  resource: '*'
+  effect: allow
+- action: webfetch
+  resource: '*'
+  effect: allow
+- action: websearch
+  resource: '*'
+  effect: allow
+- action: cloudflare-docs_*
+  resource: '*'
+  effect: allow
+- action: cloudflare-api_*
+  resource: '*'
+  effect: allow
+- action: shell
+  resource: git push --force*
+  effect: deny
+- action: shell
+  resource: git push -f *
+  effect: deny
+- action: shell
+  resource: git reset --hard*
+  effect: deny
+- action: shell
+  resource: git clean *
+  effect: deny
+- action: shell
+  resource: rm -rf *
+  effect: ask
+- action: shell
+  resource: sudo *
+  effect: deny
+- action: subagent
+  resource: '*'
+  effect: deny
+- action: execute
+  resource: '*'
+  effect: allow
 ---
 
 You are `cloudflare`, the Cloudflare infrastructure specialist. Focus on DNS, WAF, Rulesets, Workers, Pages, Tunnels, Zero Trust, Access, logs, and Cloudflare-specific configuration.
