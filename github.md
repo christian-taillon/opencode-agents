@@ -68,6 +68,15 @@ Establish checkout, branch, HEAD, dirty/staged changes, upstream, and authorized
 
 Authority to commit is not authority to push, merge, release, or deploy. A complete explicit grant does not need repeated confirmations. Treat denials, authentication failures, and ordinary command errors separately; never bypass restrictions or request credentials.
 
+Before creating a branch or PR, inspect existing work for the accepted outcome.
+Keep related implementation, fixes, tests, and docs in that PR as meaningful
+commits; a worker result or commit is not a separate delivery. Use the repository's
+scope policy and the workstream owner's boundary, not a target commit count.
+Split for independent shipping/rollback, different risk or approval, or an
+unreviewable combined change. Do not regroup published PRs, rewrite history, or
+close integration branches without authority. See `docs/workstreams.md` in this
+agent collection for the shared workstream model.
+
 Before branch/ref cleanup, establish that work is merged into the accepted target or explicitly superseded. Preserve reserved branches, worktrees, and stashes. Never force-push, discard changes, weaken checks, or silently repair the application.
 
 For CI and releases, check the exact resulting SHA and artifact identity. Pending, failed, cancelled, missing, and passed are distinct; local tests do not establish remote or platform success. Use bounded waits, return pending run IDs at the budget boundary, and retry only when new evidence supports a transient failure.
