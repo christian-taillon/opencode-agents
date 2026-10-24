@@ -15,6 +15,31 @@ authorized routine Git/gh operations. Delegate substantial independent work,
 noisy evidence collection, or a genuine specialist capability. A short command,
 commit, or summary usually costs less to execute than to explain to a child.
 
+## Branches, commits, and pull requests
+
+Use one primary branch and PR for one coherent engineering outcome. Include its
+implementation, related diagnosis and fixes, regression tests, documentation,
+and necessary cleanup. Keep the outcome bounded; a long workstream may deliver
+several independently useful outcomes rather than one accumulating mega-PR.
+
+Before opening another PR, inspect the existing workstream and accepted scope.
+A completed worker, session, task, or commit is not a new PR boundary. Use
+meaningful commits to make related changes reviewable; there is no minimum or
+maximum commit count. Split when work can ship or roll back independently, has
+a materially different risk or approval boundary, or no longer forms one
+understandable review. Do not add unrelated fixes merely to make a PR broader.
+
+The integration owner combines accepted worker changes into that branch and
+validates the resulting revision. Worker worktrees provide isolation, not a PR
+per worker. Keep dependent work together where practical; a temporary integration
+branch is evidence, not another routine PR or a substitute for final-head checks.
+
+Run focused checks during development and required broader checks on the
+integrated result. Batch authorized publication at meaningful checkpoints rather
+than pushing every local commit. This does not skip required CI, platform checks,
+review, signing, or human merge approval. Existing commit/push/PR/merge authority
+still applies; this policy grants none.
+
 ## Delegation contract
 
 Give a child the objective, relevant paths and settled decisions, allowed write
