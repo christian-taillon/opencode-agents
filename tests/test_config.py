@@ -516,16 +516,56 @@ class ConfigContracts(unittest.TestCase):
             with self.subTest(agent=name):
                 self.assertEqual(self.bodies[name].strip(), "")
                 self.assertFalse(self.agents[name].get("system"))
-                self.assertFalse(self.config.get("agents", {}).get(name, {}).get("system"))
+                self.assertFalse(
+                    self.config.get("agents", {}).get(name, {}).get("system")
+                )
 
     def test_direct_owns_routine_git(self):
-        for command in ("git diff --stat", "git commit -m synthetic", "git push origin", "gh pr create --draft"):
+        for command in (
+            "git diff --stat",
+            "git commit -m synthetic",
+            "git push origin",
+            "gh pr create --draft",
+        ):
             self.expect("direct", "shell", command, "allow")
         # A native prompt must not turn a worker into a lifecycle agent.
         for command in ("git commit -m synthetic", "git push origin"):
             self.expect("coder", "shell", command, "deny")
         self.expect("direct", "subagent", "direct", "deny")
         self.expect("direct", "subagent", "autopilot", "deny")
+
+    def test_github_inspection_examples(self):
+        commands = re.findall(r"`((?:git|gh) [^`]+)`", self.bodies["github"])
+        self.assertTrue(commands, "Missing concrete read-only inspection examples")
+        policies = self.config.get("experimental", {}).get("policies", [])
+
+        def policy_effect(command):
+            # Offline command strings only; nothing here executes a shell command.
+            return next(
+                (
+                    rule["effect"]
+                    for rule in reversed(policies)
+                    if rule["action"] == "tool.use"
+                    and matches(f"shell:{command}", rule["resource"])
+                ),
+                "allow",
+            )
+
+        scoped_search = "git grep -n -i branch -- README.md docs/README.md"
+        for command in (*commands, scoped_search):
+            with self.subTest(command=command):
+                self.expect("github", "shell", command, "allow")
+                self.assertEqual(policy_effect(command), "allow")
+
+        excluded_search = scoped_search + " ':!*.env' ':!.env' ':!.env.*'"
+        for command in (
+            excluded_search,
+            excluded_search + "; " + commands[0],
+            "cat .env",
+            "cat config.env",
+        ):
+            with self.subTest(command=command):
+                self.assertEqual(policy_effect(command), "deny")
 
     def test_mcp_execution_and_isolation(self):
         for name in ("github", "cloudflare"):
@@ -537,12 +577,18 @@ class ConfigContracts(unittest.TestCase):
         self.expect("cloudflare", "cloudflare-docs_search", "*", "allow")
         self.expect("cloudflare", "github_create_pull_request", "*", "deny")
         for name in ("direct", "coder", "operations", "review"):
-            for action in ("github_create_pull_request", "cloudflare-api_request", "cloudflare-docs_search"):
+            for action in (
+                "github_create_pull_request",
+                "cloudflare-api_request",
+                "cloudflare-docs_search",
+            ):
                 self.expect(name, action, "*", "deny")
                 # V2.0.26 Tool.snapshot hides wholly-denied actions before building
                 # direct definitions or the Code Mode catalog. Not a live-server test.
                 rules = [rule for group in self.rules(name) for rule in group]
-                last = next(rule for rule in reversed(rules) if matches(action, rule["action"]))
+                last = next(
+                    rule for rule in reversed(rules) if matches(action, rule["action"])
+                )
                 self.assertEqual((last["resource"], last["effect"]), ("*", "deny"))
 
     def test_removed_references(self):

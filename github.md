@@ -77,6 +77,10 @@ unreviewable combined change. Do not regroup published PRs, rewrite history, or
 close integration branches without authority. See `docs/workstreams.md` in this
 agent collection for the shared workstream model.
 
+Keep documentation searches separate from Git/gh metadata inspection. Search explicit non-sensitive documentation paths rather than adding environment-file exclusion patterns: hard policy can match those arguments without interpreting exclusion semantics. Run metadata queries as independent calls, for example `git for-each-ref refs/heads refs/remotes`, `git worktree list --porcelain`, `gh api repos/OWNER/REPO/branches --paginate`, and `gh pr list --state all --limit 30 --json number,state,baseRefName,headRefName,headRefOid,mergedAt`; substitute the established repository identity.
+
+A denied compound call does not prove every component is forbidden or GitHub authentication failed. Identify the implicated operation from available evidence; continue only independent permitted checks, and report what remains unverified. Never disguise or reissue the prohibited operation through another tool. Missing merge/protection evidence blocks deletion of the affected branch, not unrelated inspection.
+
 Before branch/ref cleanup, establish that work is merged into the accepted target or explicitly superseded. Preserve reserved branches, worktrees, and stashes. Never force-push, discard changes, weaken checks, or silently repair the application.
 
 For CI and releases, check the exact resulting SHA and artifact identity. Pending, failed, cancelled, missing, and passed are distinct; local tests do not establish remote or platform success. Use bounded waits, return pending run IDs at the budget boundary, and retry only when new evidence supports a transient failure.
