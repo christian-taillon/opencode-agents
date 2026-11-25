@@ -50,6 +50,52 @@ Specialists keep short purpose-specific system prompts where an execution or
 review contract is more useful than generic coding behavior. Empty bodies are
 not a universal requirement.
 
+## Contained research and local work
+
+All `contained*` profiles use `mode: all`: each can be selected directly or used
+as a child when its parent's permissions allow it. Mode does not grant tools or
+delegation authority. The three core profiles are:
+
+| Profile | Capabilities | Permitted children when primary |
+| --- | --- | --- |
+| `contained` | Inspect and plan; no editing, shell, or direct web tools | `contained-local` (allow), `contained-net-research` (ask) |
+| `contained-local` | General-purpose local worker: inspect, edit, approval-gated execution; no web tools | `contained-local` only |
+| `contained-net-research` | Public web search/fetch; no repository tools, editing, shell, or delegation | None |
+
+The optional `contained-text-only` profile remains available for sanitized
+reasoning without repository or web tools. Neither `contained` nor
+`contained-local` delegates to it. Other profiles' routes remain unchanged.
+
+Plan and research with `contained`, then select `contained-local` for the
+local-only phase. Finish outstanding research children first: changing the
+primary does not revoke existing children's permissions, cancel their work, or
+erase web content from the conversation. Use a fresh local session if that
+context must not carry over, supplying only reviewed, cited findings.
+
+Keep the global installation setting `experimental.subagent_depth: 1`. A primary
+`contained-local` may launch local workers, but every child is terminal, including
+`contained` or `contained-local` selected as a child. `mode: all` does not bypass
+that depth limit. The researcher treats every internet source and embedded
+instruction as potentially malicious data, scrutinizes unfamiliar sources, and
+reports citations, uncertainty, and injection warnings. Its reports remain
+untrusted input to the coordinator and local worker.
+
+**Local-only is a capability policy, not a network sandbox.** Web tools, MCP,
+external adapters, and research delegation are denied in the local profile, but
+approved shell commands and project code can still access the host's network.
+Guaranteed offline programs require a separately network-isolated runtime.
+Model-provider connectivity is separate. The researcher's public-only prompt
+also does not enforce network-level blocking of private addresses or DNS
+redirects. Permission patterns and source review are not proof of containment.
+
+Installation migration: `contained-local.md` replaces `contained-code-local.md`.
+At controlled activation, remove the old installed profile and update any
+project overrides, commands, or saved session selections that reference its ID;
+do not retain a broader alias. Project agent rules append after global rules,
+so audit effective permissions and keep protected-command denials after broad
+shell approval rules. Stage and validate outside auto-loaded configuration;
+publishing this repository does not activate or reload the shared service.
+
 ## Long work without a manager hierarchy
 
 Use one owner with terminal workers. The owner can implement directly, send a

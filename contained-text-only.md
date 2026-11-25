@@ -1,6 +1,6 @@
 ---
 description: Contained no-tool reasoning worker for sanitized text-only tasks.
-mode: subagent
+mode: all
 permissions:
   - action: "*"
     resource: "*"
