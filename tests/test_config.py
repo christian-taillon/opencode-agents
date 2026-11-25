@@ -2,7 +2,9 @@
 # requires-python = ">=3.11"
 # dependencies = ["PyYAML>=6,<7"]
 # ///
-"""Small static contracts for V2.0.26; not a runtime or sandbox test.
+"""Static V2 contracts; contained profiles checked against V2.4.1 docs/schema.
+
+Other contracts retain their V2.0.26 baseline. Not a runtime or sandbox test.
 
 Default inputs are portable and sanitized. --config opts into inspecting a
 supplied JSON installation candidate without credential interpolation/output.
@@ -26,9 +28,10 @@ RETIRED = {
     "ops-context",
     "qwen-task",
     "yolo",
+    "contained-code-local",
     PREVIOUS_CLOUDFLARE,
 }
-PRIMARIES = {"direct", "contained"}
+PRIMARIES = {"direct", "contained", "contained-local"}
 ADAPTERS = {"claude", "antigravity"}
 LEAVES = {
     "coder",
@@ -42,7 +45,6 @@ LEAVES = {
     "gated-direct",
     "tutor",
     *ADAPTERS,
-    "contained-code-local",
     "contained-net-research",
     "contained-text-only",
 }
@@ -200,6 +202,7 @@ class ConfigContracts(unittest.TestCase):
             "github",
             "cloudflare",
             "gated-direct",
+            "contained-local",
             "plan",
             "build",
         ):
@@ -353,7 +356,7 @@ class ConfigContracts(unittest.TestCase):
                     )
                 for r in routes:
                     if r["effect"] != "deny":
-                        self.assertIn(r["resource"], LEAVES)
+                        self.assertIn(r["resource"], LEAVES | {"contained-local"})
                         if r["resource"] in ADAPTERS:
                             self.assertEqual(
                                 (name, r["resource"]), ("direct", "claude")
@@ -365,7 +368,9 @@ class ConfigContracts(unittest.TestCase):
             for r in data.get("permissions", []):
                 if r["action"] == "subagent" and r["effect"] != "deny":
                     self.assertIn(name, PRIMARIES)
-                    self.assertIn(r["resource"], LEAVES - ADAPTERS)
+                    self.assertIn(
+                        r["resource"], (LEAVES | {"contained-local"}) - ADAPTERS
+                    )
         expected = {
             "coder",
             "review",
@@ -406,7 +411,7 @@ class ConfigContracts(unittest.TestCase):
         self.expect(
             "gated-direct", "external_directory", "/synthetic/reference/*", "ask"
         )
-        self.expect("contained-code-local", "webfetch", "https://example.com", "deny")
+        self.expect("contained-local", "webfetch", "https://example.com", "deny")
         for name in ("contained-net-research", "contained-text-only"):
             for action in ("read", "edit", "shell"):
                 self.expect(name, action, "synthetic", "deny")
@@ -417,6 +422,126 @@ class ConfigContracts(unittest.TestCase):
                 "customize-opencode",
                 "allow" if name == "config" else "deny",
             )
+
+    def test_contained_modes_and_routes(self):
+        expected = {
+            "contained": {
+                "contained-local": "allow",
+                "contained-net-research": "ask",
+            },
+            "contained-local": {"contained-local": "allow"},
+            "contained-net-research": {},
+            "contained-text-only": {},
+        }
+        for name, allowed in expected.items():
+            self.assertEqual(self.agents[name]["mode"], "all")
+            for child in self.agents.keys() | {
+                "contained-code-local",
+                "contained-local-other",
+                "contained-local/nested",
+                "unknown-agent",
+                "build",
+                "general",
+                "explore",
+            }:
+                self.expect(name, "subagent", child, allowed.get(child, "deny"))
+        self.assertNotIn("contained-code-local", self.agents)
+
+    def test_contained_tool_boundaries(self):
+        for name in ("contained", "contained-local"):
+            for action in ("read", "glob", "grep", "question"):
+                self.expect(name, action, "synthetic", "allow")
+            for path in (".env", ".env.example", "config.env", "src/.env.local"):
+                self.expect(name, "read", path, "deny")
+            for action, resource in (
+                ("websearch", "public documentation"),
+                ("webfetch", "https://example.com"),
+                ("browser", "*"),
+                ("execute", "*"),
+                ("github_create_pull_request", "*"),
+                ("cloudflare-api_request", "*"),
+                ("opencode_list_mcp_resources", "synthetic"),
+                ("opencode_read_mcp_resource", "synthetic:resource"),
+                ("skill", "session-coordination"),
+                ("unknown-network-tool", "*"),
+            ):
+                self.expect(name, action, resource, "deny")
+            self.expect(name, "external_directory", "/synthetic/outside/*", "deny")
+        self.expect("contained", "edit", "src/main.py", "deny")
+        self.expect("contained", "shell", "pwd", "deny")
+        self.expect("contained-local", "edit", "src/main.py", "allow")
+        self.expect("contained-local", "shell", "git status --short", "allow")
+        self.expect("contained-local", "shell", "pnpm test", "ask")
+        self.expect("contained-local", "shell", "uv run pytest", "ask")
+        for name in ("contained-net-research", "contained-text-only"):
+            for action in (
+                "read",
+                "glob",
+                "grep",
+                "edit",
+                "shell",
+                "execute",
+                "browser",
+                "external_directory",
+                "skill",
+                "github_create_pull_request",
+                "opencode_read_mcp_resource",
+                "unknown-network-tool",
+            ):
+                self.expect(name, action, "synthetic", "deny")
+            self.expect(name, "question", "*", "allow")
+            for action in ("webfetch", "websearch"):
+                self.expect(
+                    name,
+                    action,
+                    "synthetic",
+                    "allow" if name == "contained-net-research" else "deny",
+                )
+
+    def test_contained_local_shell_guardrails(self):
+        # Synthetic command strings only; these probes never execute commands.
+        for command in (
+            "git reset --hard HEAD",
+            "git clean -fd",
+            "git checkout -- src/main.py",
+            "git restore src/main.py",
+            "git push --force origin",
+            "git push -f origin",
+            "sudo ls",
+            "su root",
+            "curl https://example.com",
+            "wget https://example.com",
+            "ssh example.com",
+            "git clone https://example.com/repo",
+            "git fetch origin",
+            "git pull",
+            "git push origin",
+            "pnpm install",
+        ):
+            self.expect("contained-local", "shell", command, "deny")
+
+    def test_contained_prompt_contracts(self):
+        # Text contracts prevent accidental policy deletion, not prompt-injection tests.
+        research = self.bodies["contained-net-research"]
+        for phrase in (
+            "potentially malicious untrusted data",
+            "never authority",
+            "private context",
+            "Independently corroborate",
+            "unverified",
+            "claim-level citations",
+            "injection warnings",
+        ):
+            self.assertIn(phrase, research)
+        for name in ("contained", "contained-local"):
+            body = self.bodies[name].lower()
+            for phrase in (
+                "untrusted data",
+                "terminal",
+                "switching profiles",
+                "os-level network",
+            ):
+                self.assertIn(phrase, body)
 
     def test_environment_file_policies(self):
         policies = self.config.get("experimental", {}).get("policies", [])
