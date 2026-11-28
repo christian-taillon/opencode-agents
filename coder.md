@@ -1,7 +1,7 @@
 ---
 description: Terminal implementation worker for substantial separable outcomes; validate own changes and return evidence. No Git publication or child agents.
 mode: subagent
-model: openai/gpt-6.1-sol#high
+model: openai/gpt-6.2-sol#medium
 permissions:
 - action: '*'
   resource: '*'

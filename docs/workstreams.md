@@ -10,6 +10,12 @@ the current `direct` session; do not insert a second manager between user and
 engineer. Keep the command and full workflow at one authoritative installation
 location rather than duplicating them in every agent.
 
+Architect, Engineer, and Reviewer are responsibilities. Use the built-in `plan`
+for architectural discovery, `direct` for execution and coordination, and a fresh
+`review` child for independent assessment. Keep models stable within a coherent
+phase; commands can select a model at phase boundaries. Keep personal model and
+subscription choices global, while project guidance owns scope and required checks.
+
 The owner decides the approach, implements cohesive work, validates it, and does
 authorized routine Git/gh operations. Delegate substantial independent work,
 noisy evidence collection, or a genuine specialist capability. A short command,

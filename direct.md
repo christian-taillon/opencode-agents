@@ -1,7 +1,7 @@
 ---
 description: Default engineer; own cohesive work and routine Git directly. Delegate only for independence, substantial isolation, or a specialist capability.
 mode: all
-model: openai/gpt-6.1-sol#xhigh
+model: anthropic/claude-opus-5-5#medium
 permissions:
 - action: '*'
   resource: '*'

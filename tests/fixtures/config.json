@@ -1,10 +1,10 @@
 {
   "default_agent": "direct",
-  "model": "openai/gpt-6-luna",
+  "model": "anthropic/claude-opus-5-5",
   "providers": {"openai": {}, "ollama": {}},
   "agents": {
-    "build": {"mode": "primary", "model": "openai/gpt-6.1-sol#high"},
-    "plan": {"mode": "primary", "permissions": [
+    "build": {"mode": "primary", "model": "anthropic/claude-opus-5-5#medium"},
+    "plan": {"mode": "primary", "model": "anthropic/claude-fable-5-2#high", "permissions": [
       {"action": "shell", "resource": "*", "effect": "ask"},
       {"action": "shell", "resource": "git push --force*", "effect": "deny"},
       {"action": "shell", "resource": "git push -f *", "effect": "deny"},

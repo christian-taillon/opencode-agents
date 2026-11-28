@@ -225,7 +225,7 @@ class ConfigContracts(unittest.TestCase):
         self.expect("review", "shell", "pnpm test", "allow")
         self.expect("direct", "execute", "*", "allow")
 
-    def test_effective_models_and_wildcards(self):
+    def test_permission_wildcards(self):
         self.assertTrue(matches("pnpm test", "pnpm test *"))
         self.assertTrue(matches("a/b", r"a\?"))
         self.assertEqual(
@@ -235,41 +235,14 @@ class ConfigContracts(unittest.TestCase):
             "allow",
         )
 
-        def provider(model):
-            return (
-                model.split("/", 1)[0]
-                if isinstance(model, str)
-                else model.get("providerID", "")
-            )
-
-        self.assertNotIn("anthropic", str(self.config.get("model", "")).lower())
-        self.assertNotIn("claude", str(self.config.get("model", "")).lower())
-        self.assertTrue(
-            "anthropic" not in self.config.get("providers", {}),
-            "Native Anthropic provider configured",
-        )
-        for data in self.config.get("providers", {}).values():
-            for name, model in data.get("models", {}).items():
-                self.assertNotRegex(name.lower(), "anthropic|claude")
-                self.assertNotRegex(
-                    str(model.get("modelID", "")).lower(), "anthropic|claude"
-                )
-        for name in self.agents.keys() | self.config.get("agents", {}).keys():
-            inline = self.config.get("agents", {}).get(name, {})
-            self.assertNotRegex(
-                str(inline.get("model", "")).lower(), "anthropic|claude", name
-            )
-            selected = self.agents.get(name, {}).get(
-                "model", inline.get("model", self.config.get("model", ""))
-            )
-            self.assertNotEqual(provider(selected), "anthropic", name)
-            self.assertNotRegex(str(selected).lower(), "anthropic|claude", name)
+    def test_core_model_preferences(self):
         for name, model in (
-            ("direct", "openai/gpt-6.1-sol#xhigh"),
-            ("coder", "openai/gpt-6.1-sol#high"),
-            ("cloudflare", "openai/gpt-6.1-sol#high"),
+            ("direct", "anthropic/claude-opus-5-5#medium"),
+            ("coder", "openai/gpt-6.2-sol#medium"),
+            ("review", "openai/gpt-6.2-astra#medium"),
         ):
-            self.assertEqual(self.agents[name]["model"], model)
+            with self.subTest(agent=name):
+                self.assertEqual(self.agents[name]["model"], model)
 
     def test_explicit_adapter_roles(self):
         for name in ADAPTERS:
@@ -336,8 +309,6 @@ class ConfigContracts(unittest.TestCase):
         self.assertFalse(RETIRED & set(self.config.get("agents", {})))
         self.assertEqual(self.config.get("default_agent"), "direct")
         self.assertEqual(self.agents["direct"]["mode"], "all")
-        self.assertEqual(self.agents["direct"]["model"], "openai/gpt-6.1-sol#xhigh")
-        self.assertEqual(self.agents["coder"]["model"], "openai/gpt-6.1-sol#high")
         self.assertEqual(self.agents["cloudflare"]["model"], "openai/gpt-6.1-sol#high")
         self.assertEqual(self.agents["cloudflare"]["mode"], "all")
 
@@ -584,10 +555,9 @@ class ConfigContracts(unittest.TestCase):
                     )
                     self.assertEqual(selected.get("effect", "allow"), expected)
 
-    def test_model_independence_and_adapter_isolation(self):
+    def test_adapter_isolation(self):
         for name, data in self.config.get("agents", {}).items():
             if name in self.agents:
-                self.assertNotIn("anthropic", str(data.get("model", "")).lower())
                 self.assertFalse(data.get("disabled", False), "Managed role disabled")
                 if name not in ADAPTERS:
                     self.assertFalse(
@@ -614,14 +584,11 @@ class ConfigContracts(unittest.TestCase):
                     )
         for name, data in self.agents.items():
             with self.subTest(agent=name):
-                self.assertNotIn("anthropic", str(data.get("model", "")).lower())
                 if name not in ADAPTERS:
                     self.assertNotRegex(
                         self.bodies[name].lower(),
-                        r"anthropic|switchboard|externalmodel|externaleffort",
+                        r"switchboard|externalmodel|externaleffort",
                     )
-                    if name != "direct":
-                        self.assertNotRegex(self.bodies[name].lower(), r"claude")
                     self.assertFalse(
                         any(
                             r["effect"] == "allow"
@@ -636,14 +603,24 @@ class ConfigContracts(unittest.TestCase):
         for name in self.agents.keys() - ADAPTERS - {"direct", "github", "cloudflare"}:
             self.assertFalse(has_rule(self.agents[name], "execute", "*", "allow"), name)
 
-    def test_native_engineering_prompts(self):
-        for name in ("direct", "coder"):
+    def test_native_core_prompts(self):
+        for name in ("direct", "coder", "review"):
             with self.subTest(agent=name):
                 self.assertEqual(self.bodies[name].strip(), "")
                 self.assertFalse(self.agents[name].get("system"))
                 self.assertFalse(
                     self.config.get("agents", {}).get(name, {}).get("system")
                 )
+        for name in ("build", "plan"):
+            self.assertFalse(self.config.get("agents", {}).get(name, {}).get("system"))
+
+    def test_review_skill_and_permissions(self):
+        self.expect("review", "skill", "code-review", "allow")
+        self.expect("review", "skill", "implement-small", "deny")
+        self.expect("review", "edit", "src/main.py", "deny")
+        self.expect("review", "subagent", "coder", "deny")
+        for command in ("git commit -m synthetic", "git push origin", "sh -c synthetic"):
+            self.expect("review", "shell", command, "deny")
 
     def test_direct_owns_routine_git(self):
         for command in (
